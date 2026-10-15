@@ -22,7 +22,9 @@ export default function PublicLayout() {
               <span className="brand__mark" aria-hidden="true">WH</span>
               <span className="brand__text">
                 <strong className="brand__title">WH SCHOOL SCHEDULE</strong>
-                <span className="brand__subtitle">School Timetable &amp; Daily Information</span>
+                <span className="brand__subtitle">
+                  School Timetable &amp; Daily Information
+                </span>
               </span>
             </Link>
 
@@ -52,10 +54,7 @@ export default function PublicLayout() {
         </header>
 
         <main className="app-main">
-<main className="app-main">
-  <OfflineNotice />
-  <Outlet />
-</main>
+          <OfflineNotice />
           <Outlet />
         </main>
 
