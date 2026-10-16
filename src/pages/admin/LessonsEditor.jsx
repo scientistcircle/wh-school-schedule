@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Clock, Save, X } from 'lucide-react';
 import {
   createLesson, updateLesson, deleteLesson,
-  listActiveMaster,
+  listActiveMaster, updatePeriod,
 } from '../../services/adminService.js';
 import {
   validateLessonInput,
@@ -9,7 +10,6 @@ import {
   detectRoomConflicts,
   detectTimeMismatch,
 } from '../../utils/scheduleValidation.js';
-import { PERIOD_CODES } from '../../utils/constants.js';
 import { formatTime } from '../../utils/jakartaTime.js';
 import { useToast } from '../../contexts/ToastContext.jsx';
 import LoadingState from '../../components/LoadingState.jsx';
@@ -30,7 +30,6 @@ const EMPTY_FORM = {
 export default function LessonsEditor({ day, periods, lessons, activities, onChange }) {
   const toast = useToast();
 
-  // Master data hanya perlu diambil sekali saat komponen mount.
   const master = useAsync(async () => {
     const [c, t, s, r] = await Promise.all([
       listActiveMaster('classes'),
@@ -42,26 +41,15 @@ export default function LessonsEditor({ day, periods, lessons, activities, onCha
       return { error: c.error || t.error || s.error || r.error };
     }
     return {
-      data: {
-        classes: c.data,
-        teachers: t.data,
-        subjects: s.data,
-        rooms: r.data,
-      },
+      data: { classes: c.data, teachers: t.data, subjects: s.data, rooms: r.data },
     };
   }, []);
 
   const [selectedPeriodId, setSelectedPeriodId] = useState(periods[0]?.id ?? null);
 
-  // Jika periods berubah (misal ditambah), pastikan selectedPeriodId valid.
-  const periodMap = useMemo(
-    () => new Map(periods.map((p) => [p.id, p])),
-    [periods]
-  );
-  const currentPeriod =
-    periodMap.get(selectedPeriodId) ?? periods[0] ?? null;
+  const periodMap = useMemo(() => new Map(periods.map((p) => [p.id, p])), [periods]);
+  const currentPeriod = periodMap.get(selectedPeriodId) ?? periods[0] ?? null;
 
-  // Master map untuk lookup nama.
   const lookups = useMemo(() => {
     const m = master.data ?? { classes: [], teachers: [], subjects: [], rooms: [] };
     return {
@@ -76,7 +64,6 @@ export default function LessonsEditor({ day, periods, lessons, activities, onCha
     };
   }, [master.data]);
 
-  // Perkaya lessons dengan nama entitas untuk tabel & validasi.
   const enriched = useMemo(() => {
     return lessons.map((l) => ({
       ...l,
@@ -89,7 +76,6 @@ export default function LessonsEditor({ day, periods, lessons, activities, onCha
     }));
   }, [lessons, lookups, periodMap]);
 
-  // Konflik di seluruh hari.
   const teacherConflicts = useMemo(
     () => detectTeacherConflicts(enriched, periods, lookups.teachers),
     [enriched, periods, lookups.teachers]
@@ -103,7 +89,6 @@ export default function LessonsEditor({ day, periods, lessons, activities, onCha
     [activities, periods]
   );
 
-  // Lessons khusus sesi terpilih.
   const lessonsInPeriod = useMemo(() => {
     if (!currentPeriod) return [];
     return enriched
@@ -115,9 +100,7 @@ export default function LessonsEditor({ day, periods, lessons, activities, onCha
   if (master.error) {
     return (
       <div className="card">
-        <p className="muted">
-          Gagal memuat data master: {master.error.message}
-        </p>
+        <p className="muted">Gagal memuat data master: {master.error.message}</p>
       </div>
     );
   }
@@ -159,7 +142,11 @@ export default function LessonsEditor({ day, periods, lessons, activities, onCha
 
       {currentPeriod && (
         <>
-          <PeriodHeader period={currentPeriod} count={lessonsInPeriod.length} />
+          <PeriodHeader
+            period={currentPeriod}
+            count={lessonsInPeriod.length}
+            onPeriodUpdated={onChange}
+          />
 
           <LessonForm
             period={currentPeriod}
@@ -196,7 +183,116 @@ export default function LessonsEditor({ day, periods, lessons, activities, onCha
   );
 }
 
-// =====================================================================
+/* =====================================================================
+   PeriodHeader — dengan editor jam inline
+   Set jam sekali → otomatis berlaku semua kelas di KBM ini.
+   ===================================================================== */
+function PeriodHeader({ period, count, onPeriodUpdated }) {
+  const toast = useToast();
+  const [editing, setEditing] = useState(false);
+  const [start, setStart] = useState(period.start_time.slice(0, 5));
+  const [end, setEnd] = useState(period.end_time.slice(0, 5));
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setStart(period.start_time.slice(0, 5));
+    setEnd(period.end_time.slice(0, 5));
+  }, [period.start_time, period.end_time]);
+
+  function cancel() {
+    setEditing(false);
+    setStart(period.start_time.slice(0, 5));
+    setEnd(period.end_time.slice(0, 5));
+  }
+
+  async function save() {
+    if (!start || !end) return toast.error('Jam mulai dan selesai wajib diisi.');
+    if (end <= start) return toast.error('Jam selesai harus setelah jam mulai.');
+
+    setBusy(true);
+    const { error } = await updatePeriod(period.id, {
+      start_time: start,
+      end_time: end,
+    });
+    setBusy(false);
+
+    if (error) return toast.error(error.message);
+    toast.success('Jam sesi diperbarui untuk semua kelas di sesi ini.');
+    setEditing(false);
+    onPeriodUpdated?.();
+  }
+
+  return (
+    <div className="period-header">
+      <div className="period-header__main">
+        <strong>{period.period_name}</strong>
+
+        {!editing ? (
+          <span className="period-header__time">
+            <Clock size={13} strokeWidth={2.25} />
+            {formatTime(period.start_time)}–{formatTime(period.end_time)}
+          </span>
+        ) : (
+          <span className="period-time-edit">
+            <input
+              type="time"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              aria-label="Jam mulai"
+            />
+            <span className="period-time-edit__sep">–</span>
+            <input
+              type="time"
+              value={end}
+              onChange={(e) => setEnd(e.target.value)}
+              aria-label="Jam selesai"
+            />
+          </span>
+        )}
+      </div>
+
+      <div className="period-header__actions">
+        <span className="badge badge--imp-normal">{count} kelas terisi</span>
+
+        {!editing ? (
+          <button
+            type="button"
+            className="btn btn--ghost btn--xs"
+            onClick={() => setEditing(true)}
+          >
+            <Clock size={13} strokeWidth={2.25} />
+            Ubah Jam
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="btn btn--ghost btn--xs"
+              onClick={cancel}
+              disabled={busy}
+            >
+              <X size={13} strokeWidth={2.25} />
+              Batal
+            </button>
+            <button
+              type="button"
+              className="btn btn--primary btn--xs"
+              onClick={save}
+              disabled={busy}
+            >
+              <Save size={13} strokeWidth={2.25} />
+              {busy ? 'Menyimpan…' : 'Simpan'}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* =====================================================================
+   ValidationSummary
+   ===================================================================== */
 function ValidationSummary({ teacherConflicts, roomConflicts, timeMismatches }) {
   return (
     <div className="card validation-card">
@@ -241,34 +337,20 @@ function ValidationSummary({ teacherConflicts, roomConflicts, timeMismatches }) 
         </div>
       )}
 
-      <p className="muted" style={{ margin: 0, marginTop: 'var(--space-3)', fontSize: 'var(--fs-xs)' }}>
+      <p className="muted" style={{ margin: 0, marginTop: 12, fontSize: '0.75rem' }}>
         Peringatan ini tidak memblokir publikasi. Periksa dan tentukan koreksi sendiri.
       </p>
     </div>
   );
 }
 
-// =====================================================================
-function PeriodHeader({ period, count }) {
-  return (
-    <div className="card period-header">
-      <div className="period-header__main">
-        <strong>{period.period_name}</strong>
-        <span className="muted">
-          {formatTime(period.start_time)}–{formatTime(period.end_time)}
-        </span>
-      </div>
-      <span className="badge badge--imp-normal">{count} kelas terisi</span>
-    </div>
-  );
-}
-
-// =====================================================================
+/* =====================================================================
+   LessonForm
+   ===================================================================== */
 function LessonForm({ period, allLessons, lookups, day, onSaved, onNotify }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [busy, setBusy] = useState(false);
 
-  // Kelas yang sudah punya entri di sesi ini — sembunyikan dari dropdown.
   const usedClassIds = new Set(
     allLessons.filter((l) => l.lesson_period_id === period.id).map((l) => l.class_id)
   );
@@ -414,13 +496,15 @@ function LessonForm({ period, allLessons, lookups, day, onSaved, onNotify }) {
   );
 }
 
-// =====================================================================
+/* =====================================================================
+   LessonTable
+   ===================================================================== */
 function LessonTable({ rows, lookups, onSaved, onNotify }) {
   const [editingId, setEditingId] = useState(null);
 
   return (
-    <div className="card">
-      <div className="table-wrap">
+    <div className="card card--flush">
+      <div className="table-wrap table-wrap--bare">
         <table className="data-table">
           <thead>
             <tr>

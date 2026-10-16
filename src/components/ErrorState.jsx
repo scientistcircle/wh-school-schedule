@@ -1,3 +1,5 @@
+import { AlertTriangle } from 'lucide-react';
+
 export default function ErrorState({
   title = 'Terjadi kesalahan',
   description,
@@ -5,7 +7,9 @@ export default function ErrorState({
 }) {
   return (
     <div className="state-block state-block--error" role="alert">
-      <div className="state-block__icon" aria-hidden="true">⚠️</div>
+      <div className="state-block__icon" aria-hidden="true">
+        <AlertTriangle size={22} strokeWidth={1.75} />
+      </div>
       <h3 className="state-block__title">{title}</h3>
       {description && <p className="state-block__message">{description}</p>}
       {onRetry && (

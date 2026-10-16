@@ -16,6 +16,7 @@ import MasterDataPage from './pages/admin/MasterDataPage.jsx';
 
 import ScheduleAdminListPage from './pages/admin/ScheduleAdminListPage.jsx';
 import ScheduleEditorPage from './pages/admin/ScheduleEditorPage.jsx';
+import SettingsPage from './pages/admin/SettingsPage.jsx';
 
 const Placeholder = ({ title }) => (
   <EmptyState
@@ -54,7 +55,7 @@ export default function AppRouter() {
         <Route path="master" element={<MasterDataPage />} />
         <Route path="pengumuman" element={<Placeholder title="Kelola Pengumuman" />} />
         <Route path="riwayat" element={<Placeholder title="Riwayat Perubahan" />} />
-        <Route path="pengaturan" element={<Placeholder title="Pengaturan" />} />
+     <Route path="pengaturan" element={<SettingsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
