@@ -298,3 +298,30 @@ export async function listLessons(dayId) {
     .eq('school_day_id', dayId);
   return { data: data ?? [], error };
 }
+
+// Simpan banyak pelajaran sekaligus untuk satu sesi.
+// Baris yang sudah ada (class_id + lesson_period_id sama) akan diperbarui,
+// yang baru akan dibuat.
+export async function bulkUpsertLessons(dayId, periodId, rows) {
+  const payload = rows.map((r) => ({
+    school_day_id: dayId,
+    lesson_period_id: periodId,
+    class_id: r.class_id,
+    teacher_id: r.teacher_id,
+    subject_id: r.subject_id,
+    room_id: r.room_id,
+    substitute_teacher_id: r.substitute_teacher_id ?? null,
+    substitute_teacher_name: r.substitute_teacher_name ?? null,
+    notes: r.notes ?? null,
+    is_cancelled: r.is_cancelled ?? false,
+  }));
+
+  if (payload.length === 0) return { data: [], error: null };
+
+  const { data, error } = await supabase
+    .from('lessons')
+    .upsert(payload, { onConflict: 'lesson_period_id,class_id' })
+    .select();
+
+  return { data: data ?? [], error };
+}

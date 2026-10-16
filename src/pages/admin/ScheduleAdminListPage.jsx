@@ -10,6 +10,7 @@ import LoadingState from '../../components/LoadingState.jsx';
 import ErrorState from '../../components/ErrorState.jsx';
 import EmptyState from '../../components/EmptyState.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
+import SearchableSelect from '../../components/SearchableSelect.jsx';
 
 export default function ScheduleAdminListPage() {
   const toast = useToast();
@@ -103,21 +104,20 @@ export default function ScheduleAdminListPage() {
         <form className="card admin-form" onSubmit={handleCopy}>
           <h2 className="card__title">Salin dari Hari Sebelumnya</h2>
           <div className="form-grid">
-            <label className="field">
-              <span>Dari tanggal</span>
-              <select
-                value={copyFrom}
-                onChange={(e) => setCopyFrom(e.target.value)}
-                required
-              >
-                <option value="">— Pilih sumber —</option>
-                {state.rows.map((r) => (
-                  <option key={r.id} value={r.schedule_date}>
-                    {formatDateLong(r.schedule_date)} ({r.status})
-                  </option>
-                ))}
-              </select>
-            </label>
+        <label className="field">
+  <span>Dari tanggal</span>
+  <SearchableSelect
+    value={copyFrom}
+    onChange={setCopyFrom}
+    options={state.rows.map((r) => ({
+      value: r.schedule_date,
+      label: formatDateLong(r.schedule_date),
+      sublabel: r.status === 'published' ? 'Sudah dipublikasikan' : 'Draft',
+    }))}
+    placeholder="— Pilih sumber —"
+    searchPlaceholder="Cari tanggal…"
+  />
+</label>
             <label className="field">
               <span>Ke tanggal</span>
               <input

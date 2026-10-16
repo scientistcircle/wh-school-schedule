@@ -1,38 +1,26 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import SearchableSelect from './SearchableSelect.jsx';
 
-// Dropdown + search untuk memilih kelas di halaman per-sesi.
 export default function ClassFilter({ classes, value, onChange }) {
-  const [query, setQuery] = useState('');
-  const filtered = useMemo(() => {
-    if (!query) return classes;
-    const q = query.toLowerCase();
-    return classes.filter((c) => c.name.toLowerCase().includes(q));
-  }, [classes, query]);
-
-  useEffect(() => {
-    // Kalau kelas terpilih hilang dari hasil filter, jangan paksa reset.
-    // Pengguna tetap bisa melihat kelas terpilih di dropdown.
-  }, [filtered, value]);
+  const options = useMemo(
+    () =>
+      classes.map((c) => ({
+        value: c.id,
+        label: c.name,
+        sublabel: c.grade_level ? `Tingkat ${c.grade_level}` : undefined,
+      })),
+    [classes]
+  );
 
   return (
     <div className="class-filter">
-      <input
-        type="search"
-        className="class-filter__search"
-        placeholder="Cari kelas…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
-      <select
-        className="class-filter__select"
+      <SearchableSelect
         value={value ?? ''}
-        onChange={(e) => onChange(e.target.value || null)}
-      >
-        <option value="">— Semua kelas —</option>
-        {filtered.map((c) => (
-          <option key={c.id} value={c.id}>{c.name}</option>
-        ))}
-      </select>
+        onChange={(v) => onChange(v || null)}
+        options={options}
+        placeholder="— Semua kelas —"
+        searchPlaceholder="Cari kelas…"
+      />
     </div>
   );
 }

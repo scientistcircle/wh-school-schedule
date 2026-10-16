@@ -17,6 +17,8 @@ import MasterDataPage from './pages/admin/MasterDataPage.jsx';
 import ScheduleAdminListPage from './pages/admin/ScheduleAdminListPage.jsx';
 import ScheduleEditorPage from './pages/admin/ScheduleEditorPage.jsx';
 import SettingsPage from './pages/admin/SettingsPage.jsx';
+import AnnouncementsAdminPage from './pages/admin/AnnouncementsAdminPage.jsx';
+import ChangeLogsPage from './pages/admin/ChangeLogsPage.jsx';
 
 const Placeholder = ({ title }) => (
   <EmptyState
@@ -47,14 +49,14 @@ export default function AppRouter() {
         }
       >
         <Route index element={<Overview />} />
-        <Route path="agenda" element={<Placeholder title="Agenda Harian" />} />
-        <Route path="piket" element={<Placeholder title="Guru Piket" />} />
+<Route path="agenda" element={<Navigate to="/admin/jadwal" replace />} />
+<Route path="piket" element={<Navigate to="/admin/jadwal" replace />} />
      <Route path="jadwal" element={<ScheduleAdminListPage />} />
 <Route path="jadwal/:date" element={<ScheduleEditorPage />} />
         <Route path="kelas" element={<ClassesAdminPage />} />
         <Route path="master" element={<MasterDataPage />} />
-        <Route path="pengumuman" element={<Placeholder title="Kelola Pengumuman" />} />
-        <Route path="riwayat" element={<Placeholder title="Riwayat Perubahan" />} />
+<Route path="pengumuman" element={<AnnouncementsAdminPage />} />
+<Route path="riwayat" element={<ChangeLogsPage />} />
      <Route path="pengaturan" element={<SettingsPage />} />
       </Route>
 

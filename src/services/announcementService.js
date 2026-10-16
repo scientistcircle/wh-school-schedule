@@ -1,8 +1,6 @@
 import { supabase } from './supabaseClient.js';
 
-// Pengumuman aktif yang boleh dibaca publik.
-// RLS sudah menyaring is_published + rentang tanggal;
-// filter ganda di sini hanya untuk berjaga-jaga.
+// ---- Publik ----
 export async function getActiveAnnouncements(limit = 20) {
   const { data, error } = await supabase
     .from('announcements')
@@ -10,10 +8,52 @@ export async function getActiveAnnouncements(limit = 20) {
     .eq('is_published', true)
     .order('created_at', { ascending: false })
     .limit(limit);
-
   return { data: data ?? [], error };
 }
 
 export async function getLatestAnnouncements(limit = 3) {
   return getActiveAnnouncements(limit);
+}
+
+// ---- Admin ----
+export async function listAllAnnouncements() {
+  const { data, error } = await supabase
+    .from('announcements')
+    .select('*')
+    .order('created_at', { ascending: false });
+  return { data: data ?? [], error };
+}
+
+export async function createAnnouncement(payload) {
+  const { data, error } = await supabase
+    .from('announcements')
+    .insert(payload)
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function updateAnnouncement(id, payload) {
+  const { data, error } = await supabase
+    .from('announcements')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single();
+  return { data, error };
+}
+
+export async function deleteAnnouncement(id) {
+  const { error } = await supabase.from('announcements').delete().eq('id', id);
+  return { error };
+}
+
+export async function toggleAnnouncementPublish(id, publish) {
+  const { data, error } = await supabase
+    .from('announcements')
+    .update({ is_published: publish })
+    .eq('id', id)
+    .select()
+    .single();
+  return { data, error };
 }

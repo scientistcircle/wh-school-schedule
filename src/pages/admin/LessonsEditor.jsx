@@ -14,7 +14,10 @@ import { formatTime } from '../../utils/jakartaTime.js';
 import { useToast } from '../../contexts/ToastContext.jsx';
 import LoadingState from '../../components/LoadingState.jsx';
 import EmptyState from '../../components/EmptyState.jsx';
+import SearchableSelect from '../../components/SearchableSelect.jsx';
 import { useAsync } from '../../hooks/useAsync.js';
+import BulkLessonsForm from '../../components/BulkLessonsForm.jsx';
+
 
 const EMPTY_FORM = {
   class_id: '',
@@ -46,7 +49,7 @@ export default function LessonsEditor({ day, periods, lessons, activities, onCha
   }, []);
 
   const [selectedPeriodId, setSelectedPeriodId] = useState(periods[0]?.id ?? null);
-
+const [mode, setMode] = useState('single'); // 'single' | 'bulk'
   const periodMap = useMemo(() => new Map(periods.map((p) => [p.id, p])), [periods]);
   const currentPeriod = periodMap.get(selectedPeriodId) ?? periods[0] ?? null;
 
@@ -140,52 +143,85 @@ export default function LessonsEditor({ day, periods, lessons, activities, onCha
         ))}
       </nav>
 
-      {currentPeriod && (
-        <>
-          <PeriodHeader
-            period={currentPeriod}
-            count={lessonsInPeriod.length}
-            onPeriodUpdated={onChange}
-          />
+  {currentPeriod && (
+  <>
+    <PeriodHeader
+      period={currentPeriod}
+      count={lessonsInPeriod.length}
+      onPeriodUpdated={onChange}
+    />
 
-          <LessonForm
-            period={currentPeriod}
-            allLessons={enriched}
+    <nav className="period-tabs">
+      <button
+        type="button"
+        className={'period-tabs__link' + (mode === 'single' ? ' is-active' : '')}
+        onClick={() => setMode('single')}
+      >
+        Satu per satu
+      </button>
+      <button
+        type="button"
+        className={'period-tabs__link' + (mode === 'bulk' ? ' is-active' : '')}
+        onClick={() => setMode('bulk')}
+      >
+        Isi banyak sekaligus
+      </button>
+    </nav>
+
+    {mode === 'single' && (
+      <>
+        <LessonForm
+          period={currentPeriod}
+          allLessons={enriched}
+          lookups={lookups}
+          day={day}
+          onSaved={onChange}
+          onNotify={(msg, type) => {
+            if (type === 'error') toast.error(msg);
+            else if (type === 'warning') toast.warning(msg);
+            else toast.success(msg);
+          }}
+        />
+
+        {lessonsInPeriod.length === 0 ? (
+          <EmptyState
+            title="Belum ada pelajaran"
+            description="Tambahkan entri pertama untuk sesi ini melalui form di atas."
+          />
+        ) : (
+          <LessonTable
+            rows={lessonsInPeriod}
             lookups={lookups}
-            day={day}
             onSaved={onChange}
             onNotify={(msg, type) => {
               if (type === 'error') toast.error(msg);
-              else if (type === 'warning') toast.warning(msg);
               else toast.success(msg);
             }}
           />
+        )}
+      </>
+    )}
 
-          {lessonsInPeriod.length === 0 ? (
-            <EmptyState
-              title="Belum ada pelajaran"
-              description="Tambahkan entri pertama untuk sesi ini melalui form di atas."
-            />
-          ) : (
-            <LessonTable
-              rows={lessonsInPeriod}
-              lookups={lookups}
-              onSaved={onChange}
-              onNotify={(msg, type) => {
-                if (type === 'error') toast.error(msg);
-                else toast.success(msg);
-              }}
-            />
-          )}
-        </>
-      )}
+    {mode === 'bulk' && (
+      <BulkLessonsForm
+        day={day}
+        period={currentPeriod}
+        classes={lookups.classes}
+        teachers={lookups.teachers}
+        subjects={lookups.subjects}
+        rooms={lookups.rooms}
+        existingLessons={lessonsInPeriod}
+        onSaved={onChange}
+      />
+    )}
+  </>
+)}
     </div>
   );
 }
 
 /* =====================================================================
-   PeriodHeader — dengan editor jam inline
-   Set jam sekali → otomatis berlaku semua kelas di KBM ini.
+   PeriodHeader — editor jam inline
    ===================================================================== */
 function PeriodHeader({ period, count, onPeriodUpdated }) {
   const toast = useToast();
@@ -357,6 +393,15 @@ function LessonForm({ period, allLessons, lookups, day, onSaved, onNotify }) {
 
   const availableClasses = lookups.classes.filter((c) => !usedClassIds.has(c.id));
 
+  const classOptions = availableClasses.map((c) => ({
+    value: c.id,
+    label: c.name,
+    sublabel: c.grade_level ? `Tingkat ${c.grade_level}` : undefined,
+  }));
+  const teacherOptions = lookups.teachers.map((t) => ({ value: t.id, label: t.name }));
+  const subjectOptions = lookups.subjects.map((s) => ({ value: s.id, label: s.name }));
+  const roomOptions = lookups.rooms.map((r) => ({ value: r.id, label: r.name }));
+
   async function submit(e) {
     e.preventDefault();
     const errs = validateLessonInput(form);
@@ -389,16 +434,14 @@ function LessonForm({ period, allLessons, lookups, day, onSaved, onNotify }) {
       <div className="form-grid">
         <label className="field">
           <span>Kelas</span>
-          <select
+          <SearchableSelect
             value={form.class_id}
-            onChange={(e) => setForm({ ...form, class_id: e.target.value })}
-            required
-          >
-            <option value="">— Pilih kelas —</option>
-            {availableClasses.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setForm({ ...form, class_id: v })}
+            options={classOptions}
+            placeholder="— Pilih kelas —"
+            searchPlaceholder="Cari kelas…"
+            emptyMessage="Semua kelas sudah terisi pada sesi ini"
+          />
           {availableClasses.length === 0 && (
             <small className="muted">Semua kelas sudah terisi pada sesi ini.</small>
           )}
@@ -406,57 +449,46 @@ function LessonForm({ period, allLessons, lookups, day, onSaved, onNotify }) {
 
         <label className="field">
           <span>Guru</span>
-          <select
+          <SearchableSelect
             value={form.teacher_id}
-            onChange={(e) => setForm({ ...form, teacher_id: e.target.value })}
-            required
-          >
-            <option value="">— Pilih guru —</option>
-            {lookups.teachers.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setForm({ ...form, teacher_id: v })}
+            options={teacherOptions}
+            placeholder="— Pilih guru —"
+            searchPlaceholder="Cari guru…"
+          />
         </label>
 
         <label className="field">
           <span>Mata Pelajaran</span>
-          <select
+          <SearchableSelect
             value={form.subject_id}
-            onChange={(e) => setForm({ ...form, subject_id: e.target.value })}
-            required
-          >
-            <option value="">— Pilih mapel —</option>
-            {lookups.subjects.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setForm({ ...form, subject_id: v })}
+            options={subjectOptions}
+            placeholder="— Pilih mapel —"
+            searchPlaceholder="Cari mapel…"
+          />
         </label>
 
         <label className="field">
           <span>Ruang</span>
-          <select
+          <SearchableSelect
             value={form.room_id}
-            onChange={(e) => setForm({ ...form, room_id: e.target.value })}
-            required
-          >
-            <option value="">— Pilih ruang —</option>
-            {lookups.rooms.map((r) => (
-              <option key={r.id} value={r.id}>{r.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setForm({ ...form, room_id: v })}
+            options={roomOptions}
+            placeholder="— Pilih ruang —"
+            searchPlaceholder="Cari ruang…"
+          />
         </label>
 
         <label className="field">
           <span>Guru Pengganti (opsional)</span>
-          <select
+          <SearchableSelect
             value={form.substitute_teacher_id}
-            onChange={(e) => setForm({ ...form, substitute_teacher_id: e.target.value })}
-          >
-            <option value="">— Tidak ada —</option>
-            {lookups.teachers.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
+            onChange={(v) => setForm({ ...form, substitute_teacher_id: v })}
+            options={teacherOptions}
+            placeholder="— Tidak ada —"
+            searchPlaceholder="Cari guru pengganti…"
+          />
         </label>
 
         <label className="field">
@@ -598,6 +630,10 @@ function LessonRowEdit({ lesson, lookups, onDone, onCancel, onNotify }) {
   });
   const [busy, setBusy] = useState(false);
 
+  const teacherOptions = lookups.teachers.map((t) => ({ value: t.id, label: t.name }));
+  const subjectOptions = lookups.subjects.map((s) => ({ value: s.id, label: s.name }));
+  const roomOptions = lookups.rooms.map((r) => ({ value: r.id, label: r.name }));
+
   async function save() {
     const errs = validateLessonInput({
       class_id: lesson.class_id,
@@ -627,34 +663,31 @@ function LessonRowEdit({ lesson, lookups, onDone, onCancel, onNotify }) {
     <tr className="row-editing">
       <td><strong>{lesson.class?.name}</strong></td>
       <td>
-        <select
+        <SearchableSelect
           value={form.teacher_id}
-          onChange={(e) => setForm({ ...form, teacher_id: e.target.value })}
-        >
-          {lookups.teachers.map((t) => (
-            <option key={t.id} value={t.id}>{t.name}</option>
-          ))}
-        </select>
+          onChange={(v) => setForm({ ...form, teacher_id: v })}
+          options={teacherOptions}
+          searchPlaceholder="Cari guru…"
+          clearable={false}
+        />
       </td>
       <td>
-        <select
+        <SearchableSelect
           value={form.subject_id}
-          onChange={(e) => setForm({ ...form, subject_id: e.target.value })}
-        >
-          {lookups.subjects.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
+          onChange={(v) => setForm({ ...form, subject_id: v })}
+          options={subjectOptions}
+          searchPlaceholder="Cari mapel…"
+          clearable={false}
+        />
       </td>
       <td>
-        <select
+        <SearchableSelect
           value={form.room_id}
-          onChange={(e) => setForm({ ...form, room_id: e.target.value })}
-        >
-          {lookups.rooms.map((r) => (
-            <option key={r.id} value={r.id}>{r.name}</option>
-          ))}
-        </select>
+          onChange={(v) => setForm({ ...form, room_id: v })}
+          options={roomOptions}
+          searchPlaceholder="Cari ruang…"
+          clearable={false}
+        />
       </td>
       <td>
         <input
