@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient.js';
+import { addDaysToDateString } from '../utils/jakartaTime.js';
 
 // =====================================================================
 // MASTER DATA (classes, teachers, subjects, rooms)
@@ -55,12 +56,55 @@ export async function getSchoolDayByDate(dateString) {
 }
 
 export async function createSchoolDay(dateString, notes = null) {
-  const { data, error } = await supabase
+  const { data: newDay, error: dayErr } = await supabase
     .from('school_days')
     .insert({ schedule_date: dateString, status: 'draft', notes })
     .select()
     .single();
-  return { data, error };
+
+  if (dayErr) return { data: null, error: dayErr };
+
+  const [y, m, d] = dateString.split('-').map(Number);
+  const dayOfWeek = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+
+  let defaultPeriods = [];
+
+  if (dayOfWeek >= 1 && dayOfWeek <= 4) {
+    defaultPeriods = [
+      { period_code: 'KBM1', period_name: 'KBM 1', start_time: '08:00:00', end_time: '09:40:00', display_order: 1 },
+      { period_code: 'KBM2', period_name: 'KBM 2', start_time: '10:00:00', end_time: '11:40:00', display_order: 2 },
+      { period_code: 'KBM3', period_name: 'KBM 3', start_time: '12:45:00', end_time: '13:45:00', display_order: 3 },
+    ];
+  } else if (dayOfWeek === 5) {
+    defaultPeriods = [
+      { period_code: 'KBM1', period_name: 'KBM 1', start_time: '08:00:00', end_time: '09:00:00', display_order: 1 },
+      { period_code: 'KBM2', period_name: 'KBM 2', start_time: '09:20:00', end_time: '11:00:00', display_order: 2 },
+    ];
+  } else if (dayOfWeek === 6) {
+    defaultPeriods = [
+      { period_code: 'KBM1', period_name: 'KBM 1', start_time: '08:00:00', end_time: '09:00:00', display_order: 1 },
+      { period_code: 'KBM2', period_name: 'KBM 2', start_time: '10:00:00', end_time: '10:50:00', display_order: 2 },
+      { period_code: 'KBM3', period_name: 'KBM 3', start_time: '10:50:00', end_time: '11:40:00', display_order: 3 },
+    ];
+  }
+
+  if (defaultPeriods.length > 0) {
+    const periodsPayload = defaultPeriods.map(p => ({
+      ...p,
+      school_day_id: newDay.id
+    }));
+
+    const { error: periodErr } = await supabase
+      .from('lesson_periods')
+      .insert(periodsPayload);
+
+    if (periodErr) {
+      console.error('Gagal membuat sesi default:', periodErr);
+      return { data: newDay, error: periodErr };
+    }
+  }
+
+  return { data: newDay, error: null };
 }
 
 export async function updateSchoolDayMeta(id, payload) {
@@ -84,9 +128,7 @@ export async function deleteSchoolDay(id) {
   return { error };
 }
 
-// Salin seluruh isi hari ke tanggal baru (kecuali guru piket).
 export async function copyDayToDate(sourceDayId, targetDate) {
-  // 1. Buat hari baru
   const { data: newDay, error: dayErr } = await supabase
     .from('school_days')
     .insert({ schedule_date: targetDate, status: 'draft',
@@ -94,7 +136,6 @@ export async function copyDayToDate(sourceDayId, targetDate) {
     .select().single();
   if (dayErr) return { error: dayErr };
 
-  // 2. Copy activities
   const { data: acts, error: actsErr } = await supabase
     .from('daily_activities')
     .select('activity_name, activity_code, start_time, end_time, display_order')
@@ -106,7 +147,6 @@ export async function copyDayToDate(sourceDayId, targetDate) {
     if (error) return { error };
   }
 
-  // 3. Copy periods
   const { data: periods, error: perErr } = await supabase
     .from('lesson_periods')
     .select('id, period_code, period_name, start_time, end_time, display_order')
@@ -125,7 +165,6 @@ export async function copyDayToDate(sourceDayId, targetDate) {
     if (error) return { error };
   }
 
-  // 4. Copy lessons — perlu re-map lesson_period_id
   const { data: newPeriods, error: npErr } = await supabase
     .from('lesson_periods')
     .select('id, period_code')
@@ -175,6 +214,41 @@ export async function copyDayToDate(sourceDayId, targetDate) {
   }
 
   return { data: newDay, error: null };
+}
+
+// FITUR BARU: SALIN 1 MINGGU PENUH
+export async function copyWeekToWeek(sourceStartDate, targetStartDate) {
+  let successCount = 0;
+  let failCount = 0;
+  let skippedCount = 0;
+  const errors = [];
+
+  for (let i = 0; i < 6; i++) {
+    const sourceDate = addDaysToDateString(sourceStartDate, i);
+    const targetDate = addDaysToDateString(targetStartDate, i);
+
+    const { data: sourceDay } = await getSchoolDayByDate(sourceDate);
+    if (!sourceDay) {
+      skippedCount++;
+      continue; 
+    }
+
+    const { data: targetDay } = await getSchoolDayByDate(targetDate);
+    if (targetDay) {
+      skippedCount++; 
+      continue; 
+    }
+
+    const { error } = await copyDayToDate(sourceDay.id, targetDate);
+    if (error) {
+      failCount++;
+      errors.push(`${targetDate}: ${error.message}`);
+    } else {
+      successCount++;
+    }
+  }
+
+  return { successCount, failCount, skippedCount, errors };
 }
 
 // =====================================================================
@@ -268,8 +342,21 @@ export async function deletePeriod(id) {
 }
 
 // =====================================================================
-// LESSONS (dipakai di Tahap 5B-2, untuk sekarang hanya baca)
+// LESSONS
 // =====================================================================
+
+export async function listLessons(dayId) {
+  const { data, error } = await supabase
+    .from('lessons')
+    .select(`
+      id, notes, is_cancelled, substitute_teacher_name,
+      lesson_period_id, class_id, teacher_id, subject_id, room_id,
+      substitute_teacher_id
+    `)
+    .eq('school_day_id', dayId);
+  return { data: data ?? [], error };
+}
+
 export async function createLesson(payload) {
   const { data, error } = await supabase
     .from('lessons').insert(payload).select().single();
@@ -287,21 +374,6 @@ export async function deleteLesson(id) {
   return { error };
 }
 
-export async function listLessons(dayId) {
-  const { data, error } = await supabase
-    .from('lessons')
-    .select(`
-      id, notes, is_cancelled, substitute_teacher_name,
-      lesson_period_id, class_id, teacher_id, subject_id, room_id,
-      substitute_teacher_id
-    `)
-    .eq('school_day_id', dayId);
-  return { data: data ?? [], error };
-}
-
-// Simpan banyak pelajaran sekaligus untuk satu sesi.
-// Baris yang sudah ada (class_id + lesson_period_id sama) akan diperbarui,
-// yang baru akan dibuat.
 export async function bulkUpsertLessons(dayId, periodId, rows) {
   const payload = rows.map((r) => ({
     school_day_id: dayId,
@@ -324,4 +396,37 @@ export async function bulkUpsertLessons(dayId, periodId, rows) {
     .select();
 
   return { data: data ?? [], error };
+}
+
+// =====================================================================
+// USER & ADMIN MANAGEMENT
+// =====================================================================
+
+export async function fetchAllUsers() {
+  const { data, error } = await supabase.rpc('get_all_users');
+  return { data: data ?? [], error };
+}
+
+export async function createNewAdmin(email, password, displayName) {
+  const { data, error } = await supabase.rpc('admin_create_user', {
+    user_email: email,
+    user_password: password,
+    user_display_name: displayName
+  });
+  return { data, error };
+}
+
+export async function updateUserRole(userId, newRole) {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ role: newRole })
+    .eq('id', userId);
+  return { error };
+}
+
+export async function deleteAdminUser(userId) {
+  const { error } = await supabase.rpc('admin_delete_user', { 
+    target_user_id: userId 
+  });
+  return { error };
 }

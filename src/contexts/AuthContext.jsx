@@ -40,7 +40,6 @@ export function AuthProvider({ children }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (!mounted) return;
       setSession(newSession ?? null);
-      // Tidak menunggu (async di callback tidak boleh blocking).
       loadProfile(newSession?.user?.id);
     });
 
@@ -55,7 +54,8 @@ export function AuthProvider({ children }) {
       session,
       user: session?.user ?? null,
       profile,
-      isAdmin: profile?.role === 'admin',
+      isAdmin: profile?.role === 'admin' || profile?.role === 'super_admin',
+      isSuperAdmin: profile?.role === 'super_admin',
       loading,
       signIn: (email, password) =>
         supabase.auth.signInWithPassword({ email, password }),

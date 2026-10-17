@@ -27,7 +27,7 @@ export default function ScheduleEditorPage() {
   const navigate = useNavigate();
   const toast = useToast();
 
-  const [tab, setTab] = useState('agenda');
+  const [tab, setTab] = useState('lessons');
 const [state, setState] = useState({
   loading: true, error: null, day: null, activities: [], duty: [], periods: [], lessons: [],
 });

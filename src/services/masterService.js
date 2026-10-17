@@ -17,3 +17,12 @@ export async function getClassById(id) {
     .maybeSingle();
   return { data, error };
 }
+
+export async function getActiveTeachers() {
+  const { data, error } = await supabase
+    .from('teachers')
+    .select('id, name')
+    .eq('is_active', true)
+    .order('name');
+  return { data: data ?? [], error };
+}

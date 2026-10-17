@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, CalendarClock, Users, BookOpen, GraduationCap,
-  Layers, Megaphone, History, Settings, LogOut, Menu, ExternalLink,
+  LayoutDashboard, BookOpen, GraduationCap,
+  Layers, Megaphone, History, Settings, LogOut, Menu, ExternalLink, HelpCircle, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
 import ThemeToggle from '../components/ThemeToggle.jsx';
+import AdminGuide from '../components/admin/AdminGuide.jsx';
 
 const adminNav = [
   { to: '/admin', label: 'Ringkasan', end: true, Icon: LayoutDashboard },
-  { to: '/admin/agenda', label: 'Agenda Harian', Icon: CalendarClock },
-  { to: '/admin/piket', label: 'Guru Piket', Icon: Users },
   { to: '/admin/jadwal', label: 'Jadwal KBM', Icon: BookOpen },
   { to: '/admin/kelas', label: 'Data Kelas', Icon: GraduationCap },
   { to: '/admin/master', label: 'Guru / Mapel / Ruang', Icon: Layers },
@@ -21,10 +20,11 @@ const adminNav = [
 ];
 
 export default function AdminLayout() {
-  const { profile, user, signOut } = useAuth();
+  const { profile, user, signOut, isSuperAdmin } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   async function handleSignOut() {
     const { error } = await signOut();
@@ -39,12 +39,14 @@ export default function AdminLayout() {
   return (
     <div className={`admin-shell ${open ? 'is-sidebar-open' : ''}`}>
       <aside className="admin-sidebar" aria-label="Navigasi admin">
+        
         <div className="admin-sidebar__brand">
-          <span className="admin-sidebar__mark" aria-hidden="true">
-            <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
-              <rect width="32" height="32" rx="8" fill="currentColor" opacity="0.18" />
-              <path d="M9 12h14M9 20h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
+          <span 
+            className="admin-sidebar__mark" 
+            aria-hidden="true" 
+            style={{ overflow: 'hidden', background: 'transparent', padding: 0, flexShrink: 0, width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 'var(--radius-md)' }}
+          >
+            <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </span>
           <div className="admin-sidebar__brand-text">
             <strong>WH Schedule</strong>
@@ -58,15 +60,25 @@ export default function AdminLayout() {
               key={to}
               to={to}
               end={end}
-              className={({ isActive }) =>
-                'admin-nav__link' + (isActive ? ' is-active' : '')
-              }
+              className={({ isActive }) => 'admin-nav__link' + (isActive ? ' is-active' : '')}
               onClick={() => setOpen(false)}
             >
               <Icon size={17} strokeWidth={2} className="admin-nav__icon" />
               <span>{label}</span>
             </NavLink>
           ))}
+
+          {/* MENU KHUSUS SUPER ADMIN */}
+          {isSuperAdmin && (
+            <NavLink
+              to="/admin/admins"
+              className={({ isActive }) => 'admin-nav__link' + (isActive ? ' is-active' : '')}
+              onClick={() => setOpen(false)}
+            >
+              <ShieldCheck size={17} strokeWidth={2} className="admin-nav__icon" />
+              <span>Kelola Admin</span>
+            </NavLink>
+          )}
         </nav>
 
         <div className="admin-sidebar__footer">
@@ -113,13 +125,15 @@ export default function AdminLayout() {
       </div>
 
       {open && (
-        <button
-          type="button"
-          className="admin-scrim"
-          aria-label="Tutup navigasi"
-          onClick={() => setOpen(false)}
-        />
+        <button type="button" className="admin-scrim" aria-label="Tutup navigasi" onClick={() => setOpen(false)} />
       )}
+
+      <button className="floating-help" onClick={() => setShowGuide(true)} title="Buka Panduan Penggunaan">
+        <HelpCircle size={24} />
+        <span>Bantuan</span>
+      </button>
+
+      <AdminGuide isOpen={showGuide} onClose={() => setShowGuide(false)} />
     </div>
   );
 }

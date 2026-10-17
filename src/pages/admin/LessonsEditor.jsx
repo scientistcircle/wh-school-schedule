@@ -49,7 +49,7 @@ export default function LessonsEditor({ day, periods, lessons, activities, onCha
   }, []);
 
   const [selectedPeriodId, setSelectedPeriodId] = useState(periods[0]?.id ?? null);
-const [mode, setMode] = useState('single'); // 'single' | 'bulk'
+const [mode, setMode] = useState('bulk'); // 'single' | 'bulk'
   const periodMap = useMemo(() => new Map(periods.map((p) => [p.id, p])), [periods]);
   const currentPeriod = periodMap.get(selectedPeriodId) ?? periods[0] ?? null;
 
@@ -204,6 +204,7 @@ const [mode, setMode] = useState('single'); // 'single' | 'bulk'
 
     {mode === 'bulk' && (
       <BulkLessonsForm
+          key={currentPeriod.id}
         day={day}
         period={currentPeriod}
         classes={lookups.classes}

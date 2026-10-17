@@ -1,9 +1,7 @@
 // =====================================================================
 // Validasi jadwal — dipakai di editor pelajaran.
-// Semua fungsi mengembalikan array pesan (bisa kosong = tidak ada masalah).
 // =====================================================================
 
-// Validasi satu entri sebelum disimpan.
 export function validateLessonInput(lesson) {
   const errors = [];
   if (!lesson.class_id) errors.push('Kelas wajib dipilih.');
@@ -13,17 +11,18 @@ export function validateLessonInput(lesson) {
   return errors;
 }
 
-// Deteksi konflik guru: guru sama, sesi sama (waktu sama), kelas berbeda.
-// Return array of { periodName, teacherName, classes: [...] }.
+// Deteksi konflik guru: guru sama, sesi sama, TAPI mapel/ruang berbeda.
+// Jika mapel & ruang SAMA, itu kelas gabungan (bukan konflik).
 export function detectTeacherConflicts(lessons, periods, teachers) {
   const periodMap = new Map(periods.map((p) => [p.id, p]));
   const teacherMap = new Map(teachers.map((t) => [t.id, t]));
-  const groups = new Map(); // key: `${period_id}::${teacher_id}`
-
+  
+  // Group by period_id dan teacher_id
+  const groups = new Map(); 
   for (const l of lessons) {
     if (l.is_cancelled) continue;
     if (!l.lesson_period_id || !l.teacher_id) continue;
-    // Guru pengganti tidak dihitung konflik (mereka menggantikan).
+    
     const key = `${l.lesson_period_id}::${l.teacher_id}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(l);
@@ -32,6 +31,15 @@ export function detectTeacherConflicts(lessons, periods, teachers) {
   const conflicts = [];
   for (const [key, rows] of groups) {
     if (rows.length < 2) continue;
+    
+    // Cek apakah semuanya kelas gabungan (subject_id dan room_id sama persis)
+    const isCombinedClass = rows.every(r => 
+      r.subject_id === rows[0].subject_id && 
+      r.room_id === rows[0].room_id
+    );
+    
+    if (isCombinedClass) continue; // Abaikan jika kelas gabungan
+
     const [periodId, teacherId] = key.split('::');
     conflicts.push({
       type: 'teacher',
@@ -43,15 +51,17 @@ export function detectTeacherConflicts(lessons, periods, teachers) {
   return conflicts;
 }
 
-// Deteksi konflik ruang: ruang sama, sesi sama, kelas berbeda.
+// Deteksi konflik ruang: ruang sama, sesi sama, TAPI guru/mapel berbeda.
+// Jika guru & mapel SAMA, itu kelas gabungan (bukan konflik).
 export function detectRoomConflicts(lessons, periods, rooms) {
   const periodMap = new Map(periods.map((p) => [p.id, p]));
   const roomMap = new Map(rooms.map((r) => [r.id, r]));
-  const groups = new Map(); // key: `${period_id}::${room_id}`
-
+  
+  const groups = new Map(); 
   for (const l of lessons) {
     if (l.is_cancelled) continue;
     if (!l.lesson_period_id || !l.room_id) continue;
+    
     const key = `${l.lesson_period_id}::${l.room_id}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(l);
@@ -60,6 +70,15 @@ export function detectRoomConflicts(lessons, periods, rooms) {
   const conflicts = [];
   for (const [key, rows] of groups) {
     if (rows.length < 2) continue;
+
+    // Cek apakah semuanya kelas gabungan (teacher_id dan subject_id sama persis)
+    const isCombinedClass = rows.every(r => 
+      r.teacher_id === rows[0].teacher_id && 
+      r.subject_id === rows[0].subject_id
+    );
+
+    if (isCombinedClass) continue; // Abaikan jika kelas gabungan
+
     const [periodId, roomId] = key.split('::');
     conflicts.push({
       type: 'room',
@@ -71,8 +90,6 @@ export function detectRoomConflicts(lessons, periods, rooms) {
   return conflicts;
 }
 
-// Deteksi ketidaksesuaian waktu antara daily_activities dan lesson_periods
-// yang memiliki kode sama (mis. KBM1 di agenda 08:00–08:50 tapi di sesi 08:00–08:55).
 export function detectTimeMismatch(activities, periods) {
   const byCode = new Map();
   for (const a of activities) {

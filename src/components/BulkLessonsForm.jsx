@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Save, Zap, Trash2 } from 'lucide-react';
+import { Save, Zap, Trash2, CheckSquare, Square } from 'lucide-react';
 import SearchableSelect from './SearchableSelect.jsx';
 import { bulkUpsertLessons, deleteLesson } from '../services/adminService.js';
 import { useToast } from '../contexts/ToastContext.jsx';
@@ -22,6 +22,7 @@ export default function BulkLessonsForm({
 }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const [selectedClasses, setSelectedClasses] = useState(new Set());
 
   // State tiap baris: class_id -> { teacher_id, subject_id, room_id, lesson_id? }
   const [rows, setRows] = useState(() => {
@@ -44,18 +45,9 @@ export default function BulkLessonsForm({
   const [bulkSubject, setBulkSubject] = useState('');
   const [bulkRoom, setBulkRoom] = useState('');
 
-  const teacherOptions = useMemo(
-    () => teachers.map((t) => ({ value: t.id, label: t.name })),
-    [teachers]
-  );
-  const subjectOptions = useMemo(
-    () => subjects.map((s) => ({ value: s.id, label: s.name })),
-    [subjects]
-  );
-  const roomOptions = useMemo(
-    () => rooms.map((r) => ({ value: r.id, label: r.name })),
-    [rooms]
-  );
+  const teacherOptions = useMemo(() => teachers.map((t) => ({ value: t.id, label: t.name })), [teachers]);
+  const subjectOptions = useMemo(() => subjects.map((s) => ({ value: s.id, label: s.name })), [subjects]);
+  const roomOptions = useMemo(() => rooms.map((r) => ({ value: r.id, label: r.name })), [rooms]);
 
   // Statistik
   const stats = useMemo(() => {
@@ -79,27 +71,48 @@ export default function BulkLessonsForm({
     }));
   }
 
-  function applyBulkToEmpty() {
+  // --- Logika Checkbox ---
+  function toggleClass(id) {
+    setSelectedClasses((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAll() {
+    if (selectedClasses.size === classes.length) {
+      setSelectedClasses(new Set());
+    } else {
+      setSelectedClasses(new Set(classes.map((c) => c.id)));
+    }
+  }
+
+  // --- Logika Isi Cepat ---
+  function applyBulkToSelected() {
+    if (selectedClasses.size === 0) {
+      return toast.warning('Centang kelas terlebih dahulu di kolom paling kiri.');
+    }
     if (!bulkTeacher && !bulkSubject && !bulkRoom) {
       return toast.warning('Pilih minimal satu nilai untuk diisi cepat.');
     }
     setRows((prev) => {
       const next = { ...prev };
       for (const c of classes) {
-        const r = next[c.id] ?? EMPTY_ROW;
-        // Hanya isi yang kosong.
-        const filled = [r.teacher_id, r.subject_id, r.room_id].filter(Boolean).length;
-        if (filled === 3) continue;
-        next[c.id] = {
-          ...r,
-          teacher_id: r.teacher_id || bulkTeacher,
-          subject_id: r.subject_id || bulkSubject,
-          room_id: r.room_id || bulkRoom,
-        };
+        if (selectedClasses.has(c.id)) {
+          const r = next[c.id] ?? EMPTY_ROW;
+          next[c.id] = {
+            ...r,
+            teacher_id: bulkTeacher || r.teacher_id,
+            subject_id: bulkSubject || r.subject_id,
+            room_id: bulkRoom || r.room_id,
+          };
+        }
       }
       return next;
     });
-    toast.success('Nilai diisi ke baris yang masih kosong.');
+    toast.success(`Nilai diterapkan ke ${selectedClasses.size} kelas terpilih.`);
   }
 
   function applyBulkToAll() {
@@ -129,16 +142,16 @@ export default function BulkLessonsForm({
       for (const c of classes) next[c.id] = { ...EMPTY_ROW, lesson_id: null };
       return next;
     });
+    setSelectedClasses(new Set());
   }
 
   async function save() {
-    // Susun baris yang lengkap
     const complete = [];
     const incomplete = [];
     for (const c of classes) {
       const r = rows[c.id] ?? EMPTY_ROW;
       const filled = [r.teacher_id, r.subject_id, r.room_id].filter(Boolean).length;
-      if (filled === 0) continue; // skip baris kosong
+      if (filled === 0) continue;
       if (filled < 3) {
         incomplete.push(c.name);
         continue;
@@ -152,37 +165,21 @@ export default function BulkLessonsForm({
     }
 
     if (incomplete.length > 0) {
-      return toast.error(
-        `${incomplete.length} baris belum lengkap (kelas: ${incomplete.slice(0, 3).join(', ')}${incomplete.length > 3 ? '…' : ''}). Lengkapi atau kosongkan dulu.`
-      );
+      return toast.error(`Ada ${incomplete.length} baris belum lengkap.`);
     }
-
-    if (complete.length === 0) {
-      return toast.warning('Belum ada baris lengkap untuk disimpan.');
-    }
+    if (complete.length === 0) return toast.warning('Belum ada baris lengkap.');
 
     setBusy(true);
     const { error } = await bulkUpsertLessons(day.id, period.id, complete);
     setBusy(false);
-
     if (error) return toast.error(error.message);
+    
     toast.success(`${complete.length} pelajaran disimpan.`);
+    setSelectedClasses(new Set()); // Reset centang setelah simpan
     onSaved();
   }
 
-  async function deleteExisting(classId) {
-    const r = rows[classId];
-    if (!r?.lesson_id) return;
-    if (!confirm('Hapus pelajaran kelas ini dari database?')) return;
-    const { error } = await deleteLesson(r.lesson_id);
-    if (error) return toast.error(error.message);
-    toast.success('Pelajaran dihapus.');
-    setRows((prev) => ({
-      ...prev,
-      [classId]: { ...EMPTY_ROW, lesson_id: null },
-    }));
-    onSaved();
-  }
+  const allSelected = classes.length > 0 && selectedClasses.size === classes.length;
 
   return (
     <div className="bulk-lessons">
@@ -222,18 +219,19 @@ export default function BulkLessonsForm({
             <button
               type="button"
               className="btn btn--secondary btn--xs"
-              onClick={applyBulkToEmpty}
-              title="Isi ke baris yang masih kosong"
+              onClick={applyBulkToSelected}
+              title="Terapkan ke kelas yang dicentang"
+              style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}
             >
-              Ke baris kosong
+              Ke Terpilih ({selectedClasses.size})
             </button>
             <button
               type="button"
-              className="btn btn--secondary btn--xs"
+              className="btn btn--ghost btn--xs"
               onClick={applyBulkToAll}
               title="Terapkan ke semua baris"
             >
-              Ke semua
+              Ke Semua
             </button>
           </div>
         </div>
@@ -253,7 +251,7 @@ export default function BulkLessonsForm({
           <div className="bulk-toolbar__spacer" />
           <button type="button" className="btn btn--ghost btn--xs" onClick={clearAll}>
             <Trash2 size={13} strokeWidth={2.25} />
-            <span>Kosongkan</span>
+            <span>Bersihkan</span>
           </button>
         </div>
       </div>
@@ -263,6 +261,16 @@ export default function BulkLessonsForm({
         <table className="bulk-grid">
           <thead>
             <tr>
+              <th style={{ width: 40, textAlign: 'center' }}>
+                <button
+                  type="button"
+                  onClick={toggleAll}
+                  style={{ background: 'none', border: 0, cursor: 'pointer', color: 'inherit', display: 'flex', alignItems: 'center' }}
+                  title={allSelected ? 'Batal pilih semua' : 'Pilih semua'}
+                >
+                  {allSelected ? <CheckSquare size={16} /> : <Square size={16} />}
+                </button>
+              </th>
               <th className="bulk-grid__class">Kelas</th>
               <th>Guru</th>
               <th>Mata Pelajaran</th>
@@ -275,10 +283,20 @@ export default function BulkLessonsForm({
             {classes.map((c) => {
               const r = rows[c.id] ?? EMPTY_ROW;
               const filled = [r.teacher_id, r.subject_id, r.room_id].filter(Boolean).length;
-              const status =
-                filled === 3 ? 'complete' : filled > 0 ? 'partial' : 'empty';
+              const status = filled === 3 ? 'complete' : filled > 0 ? 'partial' : 'empty';
+              const isSelected = selectedClasses.has(c.id);
+              
               return (
-                <tr key={c.id} data-status={status}>
+                <tr key={c.id} data-status={status} style={{ background: isSelected ? 'var(--primary-soft)' : undefined }}>
+                  <td style={{ textAlign: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleClass(c.id)}
+                      style={{ background: 'none', border: 0, cursor: 'pointer', color: isSelected ? 'var(--primary)' : 'var(--text-muted)', display: 'flex', alignItems: 'center' }}
+                    >
+                      {isSelected ? <CheckSquare size={16} /> : <Square size={16} />}
+                    </button>
+                  </td>
                   <td className="bulk-grid__class">
                     <strong>{c.name}</strong>
                   </td>
@@ -310,15 +328,9 @@ export default function BulkLessonsForm({
                     />
                   </td>
                   <td className="bulk-grid__status">
-                    {status === 'complete' && (
-                      <span className="dot dot--success" title="Lengkap">●</span>
-                    )}
-                    {status === 'partial' && (
-                      <span className="dot dot--warning" title="Setengah">●</span>
-                    )}
-                    {status === 'empty' && (
-                      <span className="dot dot--muted" title="Kosong">●</span>
-                    )}
+                    {status === 'complete' && <span className="dot dot--success" title="Lengkap">●</span>}
+                    {status === 'partial' && <span className="dot dot--warning" title="Setengah">●</span>}
+                    {status === 'empty' && <span className="dot dot--muted" title="Kosong">●</span>}
                   </td>
                   <td className="bulk-grid__action">
                     {r.lesson_id && (
@@ -356,4 +368,19 @@ export default function BulkLessonsForm({
       </div>
     </div>
   );
+
+  // Fungsi hapus existing
+  async function deleteExisting(classId) {
+    const r = rows[classId];
+    if (!r?.lesson_id) return;
+    if (!confirm('Hapus pelajaran kelas ini dari database?')) return;
+    const { error } = await deleteLesson(r.lesson_id);
+    if (error) return toast.error(error.message);
+    toast.success('Pelajaran dihapus.');
+    setRows((prev) => ({
+      ...prev,
+      [classId]: { ...EMPTY_ROW, lesson_id: null },
+    }));
+    onSaved();
+  }
 }

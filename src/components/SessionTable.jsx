@@ -1,4 +1,9 @@
+import { groupLessons } from '../utils/scheduleUtils.js';
+import { Link } from 'react-router-dom';
+
 export default function SessionTable({ lessons, showPeriod = false }) {
+  const grouped = groupLessons(lessons);
+
   return (
     <div className="table-wrap">
       <table className="data-table">
@@ -13,10 +18,12 @@ export default function SessionTable({ lessons, showPeriod = false }) {
           </tr>
         </thead>
         <tbody>
-          {lessons.map((l) => (
+          {grouped.map((l) => (
             <tr key={l.id} className={l.is_cancelled ? 'is-cancelled' : ''}>
               {showPeriod && <td><strong>{l.period?.period_name ?? '-'}</strong></td>}
-              <td>{l.class?.name ?? '-'}</td>
+              <td>
+                <strong>{l.classNameDisplay}</strong>
+              </td>
               <td>
                 {l.teacher?.name ?? '-'}
                 {(l.substitute_teacher?.name || l.substitute_teacher_name) && (

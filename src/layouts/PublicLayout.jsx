@@ -18,11 +18,12 @@ export default function PublicLayout() {
         <header className="public-header">
           <div className="public-header__inner">
             <Link to="/" className="brand" aria-label="WH School Schedule">
-              <span className="brand__mark" aria-hidden="true">
-                <svg viewBox="0 0 32 32" width="20" height="20" fill="none">
-                  <rect width="32" height="32" rx="8" fill="currentColor" opacity="0.15" />
-                  <path d="M9 12h14M9 20h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
+                          <span className="brand__mark" aria-hidden="true" style={{ overflow: 'hidden', background: 'transparent', padding: 0 }}>
+                <img 
+                  src="/logo.png" 
+                  alt="Logo" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} 
+                />
               </span>
               <span className="brand__text">
                 <strong className="brand__title">WH SCHOOL SCHEDULE</strong>
@@ -59,8 +60,10 @@ export default function PublicLayout() {
           <Outlet />
         </main>
 
-        <footer className="app-footer">
-          <p>WH School Schedule — waktu ditampilkan dalam zona Asia/Jakarta.</p>
+               <footer className="app-footer">
+          <p>
+            © 2026 WH School Schedule — Dibuat oleh <strong>Riefky Yoan</strong>.
+          </p>
         </footer>
       </div>
     </RealtimeProvider>

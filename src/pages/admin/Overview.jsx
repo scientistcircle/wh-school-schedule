@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CheckCircle2, Circle, ArrowRight } from 'lucide-react';
 import { supabase } from '../../services/supabaseClient.js';
 import { todayJakarta, formatDateLong, formatDateTime } from '../../utils/jakartaTime.js';
 import { StatusBadge } from '../../components/StatusBadge.jsx';
@@ -55,9 +56,52 @@ export default function Overview() {
 
   const { today, counts } = state;
 
+  // Kondisi untuk Checklist
+  const hasClasses = counts.classes > 0;
+  const hasTeachers = counts.teachers > 0;
+  const hasSchedule = today.day !== null;
+
   return (
     <div className="stack">
       <h1>Ringkasan</h1>
+
+      {/* ---- CHECKLIST ONBOARDING ---- */}
+      <section className="card">
+        <div className="card__header">
+          <h2 className="card__title">Langkah Cepat Memulai</h2>
+        </div>
+        <div className="checklist">
+          <div className={`checklist__item ${hasClasses ? 'is-done' : ''}`}>
+            {hasClasses ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+            <span>1. Tambahkan daftar kelas (X1, XI, XII, dll)</span>
+            {!hasClasses && (
+              <Link to="/admin/kelas" className="btn btn--primary btn--xs">
+                Isi Kelas <ArrowRight size={12} />
+              </Link>
+            )}
+          </div>
+          
+          <div className={`checklist__item ${hasTeachers ? 'is-done' : ''}`}>
+            {hasTeachers ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+            <span>2. Tambahkan data Guru, Mapel, & Ruang</span>
+            {!hasTeachers && (
+              <Link to="/admin/master" className="btn btn--primary btn--xs">
+                Isi Master <ArrowRight size={12} />
+              </Link>
+            )}
+          </div>
+
+          <div className={`checklist__item ${hasSchedule ? 'is-done' : ''}`}>
+            {hasSchedule ? <CheckCircle2 size={20} /> : <Circle size={20} />}
+            <span>3. Buat jadwal dan isi pelajarannya</span>
+            {!hasSchedule && (
+              <Link to="/admin/jadwal" className="btn btn--primary btn--xs">
+                Buat Jadwal <ArrowRight size={12} />
+              </Link>
+            )}
+          </div>
+        </div>
+      </section>
 
       <section className="card">
         <div className="card__header">

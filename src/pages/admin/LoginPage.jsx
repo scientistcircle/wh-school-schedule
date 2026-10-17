@@ -36,7 +36,13 @@ export default function LoginPage() {
     <div className="login-shell">
       <form className="login-card" onSubmit={handleSubmit}>
         <div className="login-brand">
-          <span className="brand__mark">WH</span>
+                  <span className="brand__mark" style={{ overflow: 'hidden', background: 'transparent', padding: 0 }}>
+            <img 
+              src="/logo.png" 
+              alt="Logo" 
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} 
+            />
+          </span>
           <div>
             <strong>WH SCHOOL SCHEDULE</strong>
             <span className="muted">Panel Admin</span>

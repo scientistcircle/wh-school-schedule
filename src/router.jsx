@@ -13,18 +13,15 @@ import LoginPage from './pages/admin/LoginPage.jsx';
 import Overview from './pages/admin/Overview.jsx';
 import ClassesAdminPage from './pages/admin/ClassesAdminPage.jsx';
 import MasterDataPage from './pages/admin/MasterDataPage.jsx';
-
 import ScheduleAdminListPage from './pages/admin/ScheduleAdminListPage.jsx';
 import ScheduleEditorPage from './pages/admin/ScheduleEditorPage.jsx';
-import SettingsPage from './pages/admin/SettingsPage.jsx';
 import AnnouncementsAdminPage from './pages/admin/AnnouncementsAdminPage.jsx';
 import ChangeLogsPage from './pages/admin/ChangeLogsPage.jsx';
+import SettingsPage from './pages/admin/SettingsPage.jsx';
+import AdminsPage from './pages/admin/AdminsPage.jsx'; /* <-- TAMBAHAN IMPORT BARU */
 
 const Placeholder = ({ title }) => (
-  <EmptyState
-    title={title}
-    description="Halaman ini akan diimplementasikan pada tahap berikutnya."
-  />
+  <EmptyState title={title} description="Halaman ini akan diimplementasikan pada tahap berikutnya." />
 );
 
 export default function AppRouter() {
@@ -49,15 +46,16 @@ export default function AppRouter() {
         }
       >
         <Route index element={<Overview />} />
-<Route path="agenda" element={<Navigate to="/admin/jadwal" replace />} />
-<Route path="piket" element={<Navigate to="/admin/jadwal" replace />} />
-     <Route path="jadwal" element={<ScheduleAdminListPage />} />
-<Route path="jadwal/:date" element={<ScheduleEditorPage />} />
+        <Route path="jadwal" element={<ScheduleAdminListPage />} />
+        <Route path="jadwal/:date" element={<ScheduleEditorPage />} />
         <Route path="kelas" element={<ClassesAdminPage />} />
         <Route path="master" element={<MasterDataPage />} />
-<Route path="pengumuman" element={<AnnouncementsAdminPage />} />
-<Route path="riwayat" element={<ChangeLogsPage />} />
-     <Route path="pengaturan" element={<SettingsPage />} />
+        <Route path="pengumuman" element={<AnnouncementsAdminPage />} />
+        <Route path="riwayat" element={<ChangeLogsPage />} />
+        <Route path="pengaturan" element={<SettingsPage />} />
+        
+        {/* RUTE KHUSUS SUPER ADMIN */}
+        <Route path="admins" element={<AdminsPage />} /> 
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
