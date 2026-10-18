@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { 
   Users, CalendarDays, ArrowRight, UserSearch, Clock, 
-  Printer, Camera, MessageCircle 
+  Printer, Camera, MessageCircle, Hourglass 
 } from 'lucide-react';
 import { useSchoolDay } from '../../hooks/useSchoolDay.js';
 import { useAnnouncements } from '../../hooks/useAnnouncements.js';
 import { useAutoRefresh } from '../../hooks/useAutoRefresh.js';
 import { useAsync } from '../../hooks/useAsync.js';
 import { useJakartaClock } from '../../hooks/useJakartaClock.js';
+import { useCountdown } from '../../hooks/useCountdown.js';
 import { getActiveTeachers } from '../../services/masterService.js';
 import { todayJakarta, formatDateLong, formatTime } from '../../utils/jakartaTime.js';
 import { PERIOD_LABEL } from '../../utils/constants.js';
@@ -19,7 +20,20 @@ import StatusBadge, { ImportanceBadge } from '../../components/StatusBadge.jsx';
 import DateNavigator from '../../components/DateNavigator.jsx';
 import SessionTable from '../../components/SessionTable.jsx';
 import SearchableSelect from '../../components/SearchableSelect.jsx';
+import PrayerSchedule from '../../components/PrayerSchedule.jsx';
+import BellNotifier from '../../components/BellNotifier.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
+
+// Komponen kecil untuk hitung mundur
+function CountdownDisplay({ endTime }) {
+  const time = useCountdown(endTime);
+  if (!time || time.isFinished) return null;
+  return (
+    <span className="countdown-badge">
+      <Hourglass size={12} /> Sisa: {String(time.hours).padStart(2, '0')}:{String(time.minutes).padStart(2, '0')}:{String(time.seconds).padStart(2, '0')}
+    </span>
+  );
+}
 
 export default function HomePage() {
   const { date: dateParam } = useParams();
@@ -50,16 +64,13 @@ export default function HomePage() {
   function generateShareText() {
     if (!data) return '';
     let text = `*JADWAL KBM - ${formatDateLong(today).toUpperCase()}*\n\n`;
-    
     if (data.duty && data.duty.length > 0) {
       text += `Guru Piket: ${data.duty.map((d) => d.teacher?.name).join(', ')}\n\n`;
     }
-
     let hasLessons = false;
     data.periods.forEach((period) => {
       const lessons = filteredLessons.filter((l) => l.period?.id === period.id);
       if (lessons.length === 0) return;
-
       hasLessons = true;
       text += `*${PERIOD_LABEL[period.period_code]}* (${formatTime(period.start_time)} - ${formatTime(period.end_time)})\n`;
       lessons.forEach((l) => {
@@ -67,16 +78,12 @@ export default function HomePage() {
       });
       text += `\n`;
     });
-
     if (!hasLessons) return '';
-
     text += `_Dikirim otomatis dari WH School Schedule._`;
     return text;
   }
 
-  function handlePrint() {
-    window.print();
-  }
+  function handlePrint() { window.print(); }
 
   function handleShareWA() {
     const text = generateShareText();
@@ -87,13 +94,12 @@ export default function HomePage() {
   async function handleShareIG() {
     const text = generateShareText();
     if (!text) return toast.warning('Tidak ada jadwal pelajaran untuk dibagikan.');
-
     try {
       await navigator.clipboard.writeText(text);
       toast.success('Teks jadwal berhasil disalin! Silakan Paste di Instagram.', 5000);
       window.open('https://instagram.com', '_blank');
     } catch (err) {
-      toast.error('Gagal menyalin teks. Browser Anda mungkin memblokir akses clipboard.');
+      toast.error('Gagal menyalin teks.');
     }
   }
 
@@ -118,13 +124,15 @@ export default function HomePage() {
         
         {data && (
           <div className="home-actions-group">
+            <BellNotifier periods={data.periods} />
+            
             <button type="button" className="btn btn--ghost btn-action" onClick={handlePrint} title="Cetak Jadwal">
               <Printer size={16} /> <span className="hide-mobile">Cetak</span>
             </button>
             <button type="button" className="btn btn--wa btn-action" onClick={handleShareWA} title="Bagikan ke WhatsApp">
               <MessageCircle size={16} /> <span className="hide-mobile">WhatsApp</span>
             </button>
-            <button type="button" className="btn btn--ig btn-action" onClick={handleShareIG} title="Salin teks & Buka Instagram">
+            <button type="button" className="btn btn--ig btn-action" onClick={handleShareIG} title="Bagi ke Instagram">
               <Camera size={16} /> <span className="hide-mobile">Instagram</span>
             </button>
           </div>
@@ -132,16 +140,9 @@ export default function HomePage() {
       </div>
 
       {loading && <LoadingState message="Memuat jadwal…" />}
-
-      {error && (
-        <ErrorState title="Gagal memuat jadwal" description={error.message} onRetry={refetch} />
-      )}
-
+      {error && <ErrorState title="Gagal memuat jadwal" description={error.message} onRetry={refetch} />}
       {!loading && !error && !data && (
-        <EmptyState
-          title="Belum ada jadwal"
-          description={`Jadwal untuk ${formatDateLong(today)} belum dipublikasikan.`}
-        />
+        <EmptyState title="Belum ada jadwal" description={`Jadwal untuk ${formatDateLong(today)} belum dipublikasikan.`} />
       )}
 
       {data && (
@@ -184,6 +185,8 @@ export default function HomePage() {
             </div>
           </div>
 
+          <PrayerSchedule city="Yogyakarta" />
+
           <div className="home-sessions">
             {filteredLessons.length === 0 ? (
               <EmptyState 
@@ -195,7 +198,6 @@ export default function HomePage() {
                 const lessonsInPeriod = filteredLessons.filter(
                   (l) => l.period?.id === period.id
                 );
-
                 if (lessonsInPeriod.length === 0) return null;
 
                 const start = period.start_time.slice(0, 5);
@@ -208,13 +210,18 @@ export default function HomePage() {
                     className={`card card--flush home-session-card ${isOngoing ? 'is-ongoing' : ''}`}
                   >
                     <div className="card__header" style={{ padding: '12px 16px', margin: 0, borderBottom: '1px solid var(--border)' }}>
-                      <h2 className="card__title" style={{ fontSize: 'var(--fs-sm)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <h2 className="card__title" style={{ fontSize: 'var(--fs-sm)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         {isOngoing && <span className="live-dot no-print" />}
                         {PERIOD_LABEL[period.period_code] ?? period.period_name}
                         <span className="muted" style={{ marginLeft: 8, fontWeight: 400 }}>
                           {formatTime(period.start_time)}–{formatTime(period.end_time)}
                         </span>
-                        {isOngoing && <span className="badge badge--status-published no-print" style={{ marginLeft: '4px' }}>Sedang Berlangsung</span>}
+                        {isOngoing && (
+                          <>
+                            <span className="badge badge--status-published no-print" style={{ marginLeft: '4px' }}>Sedang Berlangsung</span>
+                            <CountdownDisplay endTime={period.end_time} />
+                          </>
+                        )}
                       </h2>
                       <Link to={`/sesi/${period.period_code}?tanggal=${today}`} className="btn btn--ghost btn--xs no-print">
                         Detail <ArrowRight size={12} />

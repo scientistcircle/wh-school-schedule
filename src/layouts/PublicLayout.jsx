@@ -1,9 +1,11 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { CalendarDays, Clock, Megaphone, ShieldCheck } from 'lucide-react';
+import { todayJakarta, formatDateLong } from '../utils/jakartaTime.js';
 import { RealtimeProvider } from '../contexts/RealtimeContext.jsx';
 import ConnectionIndicator from '../components/ConnectionIndicator.jsx';
 import OfflineNotice from '../components/OfflineNotice.jsx';
 import ThemeToggle from '../components/ThemeToggle.jsx';
+import InstallPWA from '../components/InstallPWA.jsx';
 
 const navItems = [
   { to: '/', label: 'Jadwal Hari Ini', end: true, Icon: CalendarDays },
@@ -12,19 +14,28 @@ const navItems = [
 ];
 
 export default function PublicLayout() {
+  const today = todayJakarta();
+
   return (
     <RealtimeProvider>
       <div className="app-shell">
         <header className="public-header">
           <div className="public-header__inner">
             <Link to="/" className="brand" aria-label="WH School Schedule">
-                          <span className="brand__mark" aria-hidden="true" style={{ overflow: 'hidden', background: 'transparent', padding: 0 }}>
+              
+              {/* LOGO PNG DI SINI */}
+              <span 
+                className="brand__mark" 
+                aria-hidden="true" 
+                style={{ overflow: 'hidden', background: 'transparent', padding: 0 }}
+              >
                 <img 
                   src="/logo.png" 
                   alt="Logo" 
                   style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} 
                 />
               </span>
+
               <span className="brand__text">
                 <strong className="brand__title">WH SCHOOL SCHEDULE</strong>
                 <span className="brand__subtitle">School Timetable &amp; Daily Information</span>
@@ -60,11 +71,11 @@ export default function PublicLayout() {
           <Outlet />
         </main>
 
-               <footer className="app-footer">
-          <p>
-            © 2026 WH School Schedule — Dibuat oleh <strong>Riefky Yoan</strong>.
-          </p>
+        <footer className="app-footer">
+          <p>WH School Schedule — Dibuat oleh <strong>Riefky Yoan</strong>.</p>
         </footer>
+
+        <InstallPWA />
       </div>
     </RealtimeProvider>
   );
