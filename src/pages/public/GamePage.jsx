@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Trophy, Timer, Play, RefreshCw, Medal, ChevronDown, Send, Heart, HeartOff, Flame } from 'lucide-react';
-import { getLeaderboard, submitScore } from '../../services/gameService.js';
+import { Trophy, Timer, Play, RefreshCw, Medal, ChevronDown, Send, Heart, HeartOff, Flame, Loader2, UserCircle2, Pencil } from 'lucide-react';
+import { getLeaderboard, submitScore, checkPlayerNameExists } from '../../services/gameService.js';
 import { useToast } from '../../contexts/ToastContext.jsx';
 import { supabase } from '../../services/supabaseClient.js';
 
@@ -55,9 +55,13 @@ export default function GamePage() {
   const toast = useToast();
   const [gameState, setGameState] = useState('start');
   
+  // State Pendaftaran
   const [playerName, setPlayerName] = useState('');
-  const [difficulty, setDifficulty] = useState('medium');
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [isCheckingName, setIsCheckingName] = useState(false);
   
+  // State Game
+  const [difficulty, setDifficulty] = useState('medium');
   const [lives, setLives] = useState(3);
   const [score, setScore] = useState(0);
   const [questionNumber, setQuestionNumber] = useState(1);
@@ -70,10 +74,13 @@ export default function GamePage() {
   const inputRef = useRef(null);
   const timerRef = useRef(null);
 
-  // Ambil nama dari memori & pantau leaderboard
   useEffect(() => {
+    // Cek apakah user sudah pernah mendaftarkan nama di browser ini
     const savedName = localStorage.getItem('math_player_name');
-    if (savedName) setPlayerName(savedName);
+    if (savedName) {
+      setPlayerName(savedName);
+      setIsRegistered(true);
+    }
     
     fetchLeaderboard();
     const channel = supabase.channel('leaderboard_changes')
@@ -90,7 +97,6 @@ export default function GamePage() {
     setLeaderboard(data || []);
   };
 
-  // Timer
   useEffect(() => {
     if (gameState !== 'playing') return;
 
@@ -113,7 +119,6 @@ export default function GamePage() {
     }
   }, [gameState, questionNumber]);
 
-  // LOGIKA SIMPAN SKOR BARU: Dipicu saat gameState berubah jadi 'result'
   useEffect(() => {
     if (gameState === 'result' && score > 0) {
       const saveScore = async () => {
@@ -127,12 +132,38 @@ export default function GamePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState]);
 
-  const startGame = (e) => {
-    e.preventDefault();
-    if (!playerName.trim()) return toast.warning('Masukkan nama panggilan dulu ya!');
-    
-    localStorage.setItem('math_player_name', playerName.trim());
+  const handleChangeName = () => {
+    if (confirm('Yakin ingin mengganti nama? Skor sebelumnya tetap tersimpan dengan nama lama.')) {
+      localStorage.removeItem('math_player_name');
+      setPlayerName('');
+      setIsRegistered(false);
+    }
+  };
 
+  const startGame = async (e) => {
+    e.preventDefault();
+    
+    // Jika belum terdaftar, lakukan pengecekan nama
+    if (!isRegistered) {
+      const inputName = playerName.trim();
+      if (!inputName) return toast.warning('Masukkan nama panggilan dulu ya!');
+
+      setIsCheckingName(true);
+      const { exists, actualName, error } = await checkPlayerNameExists(inputName);
+      setIsCheckingName(false);
+
+      if (error) return toast.error('Gagal memeriksa nama. Coba lagi.');
+
+      if (exists) {
+        return toast.error(`Nama "${actualName}" sudah dipakai orang lain! Silakan gunakan nama lain.`, 6000);
+      }
+      
+      // Daftarkan nama ke browser
+      localStorage.setItem('math_player_name', inputName);
+      setIsRegistered(true);
+    }
+
+    // Mulai Game
     setLives(3);
     setScore(0);
     setCorrectCount(0);
@@ -175,7 +206,7 @@ export default function GamePage() {
     setLives(newLives);
 
     if (newLives <= 0) {
-      setGameState('result'); // Hanya ubah state, useEffect di atas yang akan menyimpan skornya
+      setGameState('result');
     } else {
       toast.error(`Salah! Nyawa tersisa ${newLives}`, 1500);
       nextQuestion();
@@ -203,25 +234,36 @@ export default function GamePage() {
             <form onSubmit={startGame} className="game-start">
               <div className="game-icon-large"><Flame size={56} className="text-danger" /></div>
               <h2>Mode Survival</h2>
-              <p className="muted" style={{ textAlign: 'center', marginBottom: '24px' }}>
-                Kamu punya 3 nyawa. Jawab soal sebanyak mungkin. Jika salah atau waktu habis, nyawa berkurang!
-              </p>
               
-              <div className="game-form-grid">
-                <label className="field field--wide">
-                  <span>Nama Panggilan</span>
-                  <input 
-                    type="text" 
-                    value={playerName} 
-                    onChange={(e) => setPlayerName(e.target.value)} 
-                    placeholder="Ahmad" 
-                    maxLength={15}
-                    required 
-                  />
-                </label>
+              {/* JIKA SUDAH TERDAFTAR (Tampilkan Nama & Tombol Ganti) */}
+              {isRegistered ? (
+                <div className="player-badge">
+                  <UserCircle2 size={20} className="text-primary" />
+                  <span>Bermain sebagai: <strong>{playerName}</strong></span>
+                  <button type="button" className="btn-edit-name" onClick={handleChangeName} title="Ganti Nama">
+                    <Pencil size={14} />
+                  </button>
+                </div>
+              ) : (
+                /* JIKA BELUM TERDAFTAR (Minta Input Nama) */
+                <div className="game-form-grid" style={{ marginTop: '16px' }}>
+                  <label className="field field--wide">
+                    <span>Nama Panggilan (Hanya diisi sekali)</span>
+                    <input 
+                      type="text" 
+                      value={playerName} 
+                      onChange={(e) => setPlayerName(e.target.value)} 
+                      placeholder="Contoh: Ahmad" 
+                      maxLength={15}
+                      required={!isRegistered} 
+                    />
+                  </label>
+                </div>
+              )}
 
+              <div className="game-form-grid" style={{ marginTop: isRegistered ? '16px' : '0' }}>
                 <label className="field field--wide">
-                  <span>Level Kesulitan (Waktu & Skor Otomatis)</span>
+                  <span>Level Kesulitan</span>
                   <div className="select-wrapper">
                     <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
                       <option value="easy">Ez (5 Detik, Skor x1)</option>
@@ -233,8 +275,9 @@ export default function GamePage() {
                 </label>
               </div>
 
-              <button type="submit" className="btn btn--danger btn--block" style={{ marginTop: '24px', padding: '14px', background: 'var(--danger)' }}>
-                <Play size={18} /> Mulai Bertahan
+              <button type="submit" className="btn btn--danger btn--block" style={{ marginTop: '24px', padding: '14px', background: 'var(--danger)' }} disabled={isCheckingName}>
+                {isCheckingName ? <Loader2 size={18} className="spin" /> : <Play size={18} />} 
+                {isCheckingName ? 'Memeriksa Nama...' : 'Mulai Bertahan'}
               </button>
             </form>
           )}

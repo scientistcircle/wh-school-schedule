@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Copy } from 'lucide-react';
+import { Copy, Plus, CalendarDays } from 'lucide-react';
 import {
   listSchoolDays, createSchoolDay, deleteSchoolDay, copyDayToDate,
   getSchoolDayByDate, copyWeekToWeek
@@ -31,7 +31,9 @@ export default function ScheduleAdminListPage() {
     setState({ loading: false, error, rows: data });
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -83,9 +85,9 @@ export default function ScheduleAdminListPage() {
     setBusy(false);
 
     if (res.failCount > 0) {
-      toast.warning(`Selesai dengan peringatan: ${res.successCount} berhasil, ${res.failCount} gagal, ${res.skippedCount} dilewati.`);
+      toast.warning(`Selesai: ${res.successCount} berhasil, ${res.failCount} gagal, ${res.skippedCount} dilewati.`);
     } else {
-      toast.success(`Berhasil menyalin ${res.successCount} hari. (${res.skippedCount} hari dilewati karena kosong/sudah ada).`);
+      toast.success(`Berhasil menyalin ${res.successCount} hari. (${res.skippedCount} hari dilewati).`);
     }
     load();
   }
@@ -100,75 +102,68 @@ export default function ScheduleAdminListPage() {
 
   return (
     <div className="stack">
-      <h1>Jadwal KBM</h1>
-      <p className="muted">Kelola jadwal harian. Pilih tanggal untuk mengedit, atau salin dari jadwal sebelumnya.</p>
-
-      {/* FORM SALIN MINGGUAN */}
-      <form className="card admin-form" onSubmit={handleCopyWeek} style={{ borderColor: 'var(--primary)', background: 'var(--primary-soft)' }}>
-        <h2 className="card__title" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary-text)' }}>
-          <Copy size={18} /> Salin Jadwal 1 Minggu Penuh (Senin - Sabtu)
-        </h2>
-        <p className="muted" style={{ marginTop: 0, color: 'var(--primary-text)' }}>
-          Sangat berguna untuk menyiapkan jadwal minggu depan dengan cepat. Hari yang sudah ada isinya tidak akan ditimpa.
-        </p>
-        <div className="form-grid">
-          <label className="field">
-            <span>Dari Tanggal (Mulai Minggu Ini)</span>
-            <input type="date" value={weekSource} onChange={(e) => setWeekSource(e.target.value)} required />
-          </label>
-          <label className="field">
-            <span>Ke Tanggal (Mulai Minggu Depan)</span>
-            <input type="date" value={weekTarget} onChange={(e) => setWeekTarget(e.target.value)} required />
-          </label>
+      <div className="page-header" style={{ marginBottom: '16px' }}>
+        <div>
+          <h1>Jadwal KBM</h1>
+          <p className="muted">Kelola jadwal harian, salin per hari, atau salin per minggu.</p>
         </div>
-        <div className="form-actions">
-          <button type="submit" className="btn btn--primary" disabled={busy}>
-            <Copy size={15} /> {busy ? 'Memproses…' : 'Salin 6 Hari Sekaligus'}
-          </button>
-        </div>
-      </form>
+      </div>
 
-      <div className="grid-2">
-        <form className="card admin-form" onSubmit={handleCreate}>
-          <h2 className="card__title">Buat Jadwal Baru</h2>
-          <label className="field">
-            <span>Tanggal</span>
-            <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} required />
-          </label>
-          <div className="form-actions">
-            <button type="submit" className="btn btn--primary" disabled={busy}>
-              Buat Jadwal Kosong
-            </button>
-          </div>
-          <p className="muted" style={{ fontSize: 'var(--fs-xs)', marginTop: '8px', margin: 0 }}>
-            *Sistem akan otomatis membuat Sesi KBM default sesuai hari yang dipilih.
-          </p>
-        </form>
-
-        <form className="card admin-form" onSubmit={handleCopyDay}>
-          <h2 className="card__title">Salin Per Hari (Spesifik)</h2>
-          <div className="form-grid">
-            <label className="field">
-              <span>Dari tanggal</span>
-              <select value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)} required>
-                <option value="">— Pilih sumber —</option>
-                {state.rows.map((r) => (
-                  <option key={r.id} value={r.schedule_date}>
-                    {formatDateLong(r.schedule_date)} ({r.status})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              <span>Ke tanggal</span>
+      <div className="compact-forms-grid">
+        
+        {/* Form 1: Buat Jadwal */}
+        <form className="compact-card" onSubmit={handleCreate}>
+          <h3 className="compact-title">Buat Jadwal Baru</h3>
+          <div className="compact-body">
+            <label className="compact-field">
+              <span>Tanggal</span>
               <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} required />
             </label>
           </div>
-          <div className="form-actions">
-            <button type="submit" className="btn btn--secondary" disabled={busy}>
-              Salin 1 Hari
-            </button>
+          <button type="submit" className="btn btn--primary btn--block compact-btn" disabled={busy}>
+            <Plus size={16}/> Buat Jadwal
+          </button>
+        </form>
+
+        {/* Form 2: Salin Per Hari */}
+        <form className="compact-card" onSubmit={handleCopyDay}>
+          <h3 className="compact-title">Salin Per Hari</h3>
+          <div className="compact-body">
+            <label className="compact-field" style={{ flex: 1 }}>
+              <span>Dari</span>
+              <select value={copyFrom} onChange={(e) => setCopyFrom(e.target.value)} required>
+                <option value="">— Pilih —</option>
+                {state.rows.map((r) => (
+                  <option key={r.id} value={r.schedule_date}>{formatDateLong(r.schedule_date)}</option>
+                ))}
+              </select>
+            </label>
+            <label className="compact-field" style={{ flex: 1 }}>
+              <span>Ke</span>
+              <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} required />
+            </label>
           </div>
+          <button type="submit" className="btn btn--secondary btn--block compact-btn" disabled={busy}>
+            <Copy size={16}/> Salin 1 Hari
+          </button>
+        </form>
+
+        {/* Form 3: Salin Mingguan */}
+        <form className="compact-card" onSubmit={handleCopyWeek}>
+          <h3 className="compact-title">Salin 1 Minggu</h3>
+          <div className="compact-body">
+            <label className="compact-field" style={{ flex: 1 }}>
+              <span>Dari</span>
+              <input type="date" value={weekSource} onChange={(e) => setWeekSource(e.target.value)} required />
+            </label>
+            <label className="compact-field" style={{ flex: 1 }}>
+              <span>Ke</span>
+              <input type="date" value={weekTarget} onChange={(e) => setWeekTarget(e.target.value)} required />
+            </label>
+          </div>
+          <button type="submit" className="btn btn--secondary btn--block compact-btn" disabled={busy}>
+            <CalendarDays size={16}/> Salin 6 Hari
+          </button>
         </form>
       </div>
 

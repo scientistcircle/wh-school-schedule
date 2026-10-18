@@ -8,7 +8,15 @@ import HomePage from './pages/public/HomePage.jsx';
 import ClassSchedulePage from './pages/public/ClassSchedulePage.jsx';
 import PeriodSchedulePage from './pages/public/PeriodSchedulePage.jsx';
 import AnnouncementsPage from './pages/public/AnnouncementsPage.jsx';
+
+import GameHubPage from './pages/public/GameHubPage.jsx';
 import GamePage from './pages/public/GamePage.jsx';
+import WordGamePage from './pages/public/WordGamePage.jsx';
+import SnakeGamePage from './pages/public/SnakeGamePage.jsx'; 
+import MemoryGamePage from './pages/public/MemoryGamePage.jsx'; 
+import CountryGamePage from './pages/public/CountryGamePage.jsx';
+import ChessGamePage from './pages/public/ChessGamePage.jsx'; 
+import BreakerGamePage from './pages/public/BreakerGamePage.jsx'; // IMPORT BARU
 
 import LoginPage from './pages/admin/LoginPage.jsx';
 import Overview from './pages/admin/Overview.jsx';
@@ -20,7 +28,7 @@ import AnnouncementsAdminPage from './pages/admin/AnnouncementsAdminPage.jsx';
 import ChangeLogsPage from './pages/admin/ChangeLogsPage.jsx';
 import SettingsPage from './pages/admin/SettingsPage.jsx';
 import AdminsPage from './pages/admin/AdminsPage.jsx';
-import GameAdminPage from './pages/admin/GameAdminPage.jsx'; /* <-- IMPORT HALAMAN BARU */
+import GameAdminPage from './pages/admin/GameAdminPage.jsx'; 
 
 const Placeholder = ({ title }) => (
   <EmptyState title={title} description="Halaman ini akan diimplementasikan pada tahap berikutnya." />
@@ -35,7 +43,16 @@ export default function AppRouter() {
         <Route path="kelas/:classId" element={<ClassSchedulePage />} />
         <Route path="sesi/:periodCode" element={<PeriodSchedulePage />} />
         <Route path="pengumuman" element={<AnnouncementsPage />} />
-        <Route path="game" element={<GamePage />} />
+        
+        <Route path="game" element={<GameHubPage />} />
+        <Route path="game/math" element={<GamePage />} />
+        <Route path="game/word" element={<WordGamePage />} />
+        <Route path="game/snake" element={<SnakeGamePage />} />
+        <Route path="game/memory" element={<MemoryGamePage />} />
+        <Route path="game/country" element={<CountryGamePage />} />
+        <Route path="game/chess" element={<ChessGamePage />} />
+        <Route path="game/breaker" element={<BreakerGamePage />} /> {/* RUTE BARU */}
+        
       </Route>
 
       <Route path="/admin/login" element={<LoginPage />} />
@@ -57,10 +74,7 @@ export default function AppRouter() {
         <Route path="riwayat" element={<ChangeLogsPage />} />
         <Route path="pengaturan" element={<SettingsPage />} />
         <Route path="admins" element={<AdminsPage />} />
-        
-        {/* RUTE HALAMAN LEADERBOARD GAME */}
         <Route path="game" element={<GameAdminPage />} /> 
-        
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

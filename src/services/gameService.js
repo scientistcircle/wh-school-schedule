@@ -1,12 +1,23 @@
 import { supabase } from './supabaseClient.js';
 
 export async function getLeaderboard() {
+  // Ambil semua data (bukan cuma 10), nanti di UI akan dibatasi tinggi & di-scroll
   const { data, error } = await supabase
     .from('game_leaderboard')
     .select('*')
     .order('score', { ascending: false })
-    .limit(10);
+    .limit(100); // Ambil maksimal 100 besar
   return { data: data ?? [], error };
+}
+
+export async function checkPlayerNameExists(name) {
+  const { data, error } = await supabase
+    .from('game_leaderboard')
+    .select('id, player_name')
+    .ilike('player_name', name.trim()) // ilike = case-insensitive
+    .maybeSingle();
+  
+  return { exists: !!data, actualName: data?.player_name, error };
 }
 
 export async function submitScore(playerName, score, correctAnswers) {
@@ -22,10 +33,8 @@ export async function submitScore(playerName, score, correctAnswers) {
   
   return { error };
 }
-// Tambahkan 2 fungsi ini di paling bawah file gameService.js
 
 export async function getAllLeaderboard() {
-  // Admin bisa melihat semua data, bukan cuma 10 besar
   const { data, error } = await supabase
     .from('game_leaderboard')
     .select('*')

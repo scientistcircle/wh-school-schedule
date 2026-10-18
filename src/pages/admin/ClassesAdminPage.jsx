@@ -6,8 +6,8 @@ import LoadingState from '../../components/LoadingState.jsx';
 import ErrorState from '../../components/ErrorState.jsx';
 import EmptyState from '../../components/EmptyState.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
+import { Plus, Check, X, Edit2 } from 'lucide-react';
 
-// Parse input massal: newline/comma split + range expansion (X1-X8).
 function parseBulkInput(text) {
   const raw = text.split(/[\n,;]+/).map((s) => s.trim()).filter(Boolean);
   const out = [];
@@ -24,7 +24,6 @@ function parseBulkInput(text) {
     }
     out.push(line);
   }
-  // Dedupe case-insensitive
   const seen = new Set();
   return out.filter((n) => {
     const key = n.toLowerCase();
@@ -37,16 +36,16 @@ function parseBulkInput(text) {
 export default function ClassesAdminPage() {
   const toast = useToast();
   const [state, setState] = useState({ loading: true, error: null, rows: [] });
-  const [mode, setMode] = useState('single'); // 'single' | 'bulk'
-
-  // Single mode
-  const [form, setForm] = useState({ name: '', grade_level: 'X', display_order: 0 });
-  const [editingId, setEditingId] = useState(null);
-
-  // Bulk mode
+  const [mode, setMode] = useState('single'); 
+  
+  const [newForm, setNewForm] = useState({ name: '', grade_level: 'X', display_order: 0 });
   const [bulkText, setBulkText] = useState('');
   const [bulkGrade, setBulkGrade] = useState('X');
   const [bulkBusy, setBulkBusy] = useState(false);
+
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', grade_level: 'X', display_order: 0 });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const load = useCallback(async () => {
     setState((s) => ({ ...s, loading: true, error: null }));
@@ -57,67 +56,82 @@ export default function ClassesAdminPage() {
   useEffect(() => { load(); }, [load]);
 
   const bulkParsed = useMemo(() => parseBulkInput(bulkText), [bulkText]);
-  const existingNames = useMemo(
-    () => new Set(state.rows.map((r) => r.name.toLowerCase())),
-    [state.rows]
-  );
+  const existingNames = useMemo(() => new Set(state.rows.map((r) => r.name.toLowerCase())), [state.rows]);
   const bulkNew = bulkParsed.filter((n) => !existingNames.has(n.toLowerCase()));
   const bulkSkip = bulkParsed.filter((n) => existingNames.has(n.toLowerCase()));
 
-  function resetSingle() {
-    setForm({ name: '', grade_level: 'X', display_order: 0 });
-    setEditingId(null);
-  }
-
-  async function submitSingle(e) {
+  async function submitAdd(e) {
     e.preventDefault();
     const payload = {
-      name: form.name.trim(),
-      grade_level: form.grade_level.trim() || null,
-      display_order: Number(form.display_order) || 0,
+      name: newForm.name.trim(),
+      grade_level: newForm.grade_level.trim() || null,
+      display_order: Number(newForm.display_order) || 0,
     };
     if (!payload.name) return toast.error('Nama kelas wajib diisi.');
 
-    const res = editingId
-      ? await updateMaster('classes', editingId, payload)
-      : await createMaster('classes', payload);
-
+    const res = await createMaster('classes', payload);
     if (res.error) return toast.error(res.error.message);
-    toast.success(editingId ? 'Kelas diperbarui.' : 'Kelas ditambahkan.');
-    resetSingle();
+    
+    toast.success('Kelas ditambahkan.');
+    setNewForm({ name: '', grade_level: 'X', display_order: 0 });
     load();
   }
 
   async function submitBulk(e) {
     e.preventDefault();
-    if (bulkNew.length === 0) {
-      return toast.warning('Tidak ada kelas baru untuk ditambahkan.');
-    }
+    if (bulkNew.length === 0) return toast.warning('Tidak ada kelas baru untuk ditambahkan.');
 
-    // display_order mulai dari max + 1
     const maxOrder = state.rows.reduce((mx, r) => Math.max(mx, r.display_order ?? 0), 0);
     setBulkBusy(true);
-    let success = 0;
-    let failed = 0;
+    let success = 0; let failed = 0;
+    
     for (let i = 0; i < bulkNew.length; i++) {
       const { error } = await createMaster('classes', {
         name: bulkNew[i],
         grade_level: bulkGrade || null,
         display_order: maxOrder + 1 + i,
       });
-      if (error) failed++;
-      else success++;
+      if (error) failed++; else success++;
     }
     setBulkBusy(false);
 
     if (failed === 0) {
-      toast.success(`${success} kelas berhasil ditambahkan.`);
+      toast.success(`${success} kelas ditambahkan.`);
       setBulkText('');
       load();
     } else {
-      toast.warning(`${success} kelas berhasil, ${failed} gagal.`);
+      toast.warning(`${success} berhasil, ${failed} gagal.`);
       load();
     }
+  }
+
+  function startEdit(row) {
+    setEditingId(row.id);
+    setEditForm({
+      name: row.name,
+      grade_level: row.grade_level ?? 'X',
+      display_order: row.display_order ?? 0,
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+  }
+
+  async function saveEdit(id) {
+    if (!editForm.name.trim()) return toast.error('Nama tidak boleh kosong.');
+    setSavingEdit(true);
+    const { error } = await updateMaster('classes', id, {
+      name: editForm.name.trim(),
+      grade_level: editForm.grade_level || null,
+      display_order: Number(editForm.display_order) || 0,
+    });
+    setSavingEdit(false);
+    
+    if (error) return toast.error(error.message);
+    toast.success('Kelas diperbarui.');
+    setEditingId(null);
+    load();
   }
 
   async function toggleActive(row) {
@@ -134,178 +148,59 @@ export default function ClassesAdminPage() {
     load();
   }
 
-  function edit(row) {
-    setMode('single');
-    setEditingId(row.id);
-    setForm({
-      name: row.name,
-      grade_level: row.grade_level ?? '',
-      display_order: row.display_order ?? 0,
-    });
-  }
-
   return (
-    <div className="stack">
-      <div className="page-header">
+    <div className="stack-simple">
+      <div className="page-header" style={{ marginBottom: '16px' }}>
         <div>
           <h1>Data Kelas</h1>
-          <p className="muted">Kelola daftar kelas. Bisa satu-satu atau tambah banyak sekaligus.</p>
+          <p className="muted">Kelola daftar kelas. Bisa tambah massal dan edit langsung di tabel.</p>
         </div>
         <div className="page-header__counts">
-          <span className="stat-pill">
-            <strong>{state.rows.length}</strong> total
-          </span>
-          <span className="stat-pill">
-            <strong>{state.rows.filter((r) => r.is_active).length}</strong> aktif
-          </span>
+          <span className="stat-pill"><strong>{state.rows.length}</strong> total</span>
+          <span className="stat-pill"><strong>{state.rows.filter((r) => r.is_active).length}</strong> aktif</span>
         </div>
       </div>
 
-      <nav className="period-tabs">
-        <button
-          type="button"
-          className={'period-tabs__link' + (mode === 'single' ? ' is-active' : '')}
-          onClick={() => setMode('single')}
-        >
-          Satu per satu
-        </button>
-        <button
-          type="button"
-          className={'period-tabs__link' + (mode === 'bulk' ? ' is-active' : '')}
-          onClick={() => setMode('bulk')}
-        >
-          Tambah massal
-        </button>
+      <nav className="period-tabs" style={{ marginBottom: '12px' }}>
+        <button type="button" className={'period-tabs__link' + (mode === 'single' ? ' is-active' : '')} onClick={() => setMode('single')}>Tambah Satu</button>
+        <button type="button" className={'period-tabs__link' + (mode === 'bulk' ? ' is-active' : '')} onClick={() => setMode('bulk')}>Tambah Massal</button>
       </nav>
 
       {mode === 'single' && (
-        <form className="card admin-form" onSubmit={submitSingle}>
-          <h2 className="card__title">{editingId ? 'Edit Kelas' : 'Tambah Kelas'}</h2>
-          <div className="form-grid">
-            <label className="field">
-              <span>Nama Kelas</span>
-              <input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Contoh: X1"
-                required
-              />
-            </label>
-            <label className="field">
-              <span>Tingkat</span>
-              <select
-                value={form.grade_level}
-                onChange={(e) => setForm({ ...form, grade_level: e.target.value })}
-              >
-                <option value="X">X</option>
-                <option value="XI">XI</option>
-                <option value="XII">XII</option>
-                <option value="">-</option>
+        <form className="card compact-card" onSubmit={submitAdd} style={{ maxWidth: '100%', marginBottom: '16px' }}>
+          <div className="form-inline">
+            <label className="field" style={{ flex: 2 }}><span>Nama Kelas</span><input value={newForm.name} onChange={(e) => setNewForm({ ...newForm, name: e.target.value })} placeholder="Contoh: X1" required /></label>
+            <label className="field" style={{ flex: 1 }}><span>Tingkat</span>
+              <select value={newForm.grade_level} onChange={(e) => setNewForm({ ...newForm, grade_level: e.target.value })}>
+                <option value="X">X</option><option value="XI">XI</option><option value="XII">XII</option><option value="">-</option>
               </select>
             </label>
-            <label className="field">
-              <span>Urutan</span>
-              <input
-                type="number"
-                value={form.display_order}
-                onChange={(e) => setForm({ ...form, display_order: e.target.value })}
-              />
-            </label>
-          </div>
-          <div className="form-actions">
-            <button type="submit" className="btn btn--primary">
-              {editingId ? 'Simpan Perubahan' : 'Tambah Kelas'}
-            </button>
-            {editingId && (
-              <button type="button" className="btn btn--ghost" onClick={resetSingle}>Batal</button>
-            )}
+            <label className="field" style={{ flex: 1 }}><span>Urutan</span><input type="number" value={newForm.display_order} onChange={(e) => setNewForm({ ...newForm, display_order: e.target.value })} /></label>
+            <div className="form-actions">
+              <button type="submit" className="btn btn--primary"><Plus size={16}/> Tambah</button>
+            </div>
           </div>
         </form>
       )}
 
       {mode === 'bulk' && (
-        <form className="card admin-form" onSubmit={submitBulk}>
-          <h2 className="card__title">Tambah Banyak Kelas Sekaligus</h2>
-          <p className="muted" style={{ marginTop: 0 }}>
-            Tulis satu nama kelas per baris. Bisa juga pisah dengan koma.
-            Dukungan rentang: <code>X1-X8</code> otomatis jadi X1 sampai X8.
-          </p>
-
-          <div className="form-grid">
-            <label className="field field--wide">
-              <span>Daftar Kelas</span>
-              <textarea
-                rows={8}
-                value={bulkText}
-                onChange={(e) => setBulkText(e.target.value)}
-                placeholder={`X1-X8\nXI PA\nXI PI\nXII Science 1\nXII Science 2\nXII Social 1-XII Social 3`}
-              />
+        <form className="card compact-card" onSubmit={submitBulk} style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <label className="field" style={{ flex: 1, minWidth: '280px' }}>
+              <span>Daftar Kelas (Satu per baris / Rentang: X1-X8)</span>
+              <textarea rows={4} value={bulkText} onChange={(e) => setBulkText(e.target.value)} placeholder={`X1-X8\nXI PA\nXI PI`} style={{ padding: '8px', resize: 'vertical' }} />
             </label>
-            <label className="field">
-              <span>Tingkat untuk semua</span>
-              <select value={bulkGrade} onChange={(e) => setBulkGrade(e.target.value)}>
-                <option value="X">X</option>
-                <option value="XI">XI</option>
-                <option value="XII">XII</option>
-                <option value="">-</option>
-              </select>
-            </label>
-          </div>
-
-          {bulkParsed.length > 0 && (
-            <div className="bulk-preview">
-              <div className="bulk-preview__stats">
-                <span className="stat-pill stat-pill--success">
-                  <strong>{bulkNew.length}</strong> baru
-                </span>
-                {bulkSkip.length > 0 && (
-                  <span className="stat-pill stat-pill--warning">
-                    <strong>{bulkSkip.length}</strong> dilewati (sudah ada)
-                  </span>
-                )}
-              </div>
-
-              {bulkNew.length > 0 && (
-                <div className="bulk-preview__chips">
-                  {bulkNew.map((n) => (
-                    <span key={n} className="chip">{n}</span>
-                  ))}
-                </div>
-              )}
-
-              {bulkSkip.length > 0 && (
-                <details className="bulk-preview__skipped">
-                  <summary>Lihat yang dilewati</summary>
-                  <div className="bulk-preview__chips">
-                    {bulkSkip.map((n) => (
-                      <span key={n} className="chip chip--muted">{n}</span>
-                    ))}
-                  </div>
-                </details>
-              )}
-            </div>
-          )}
-
-          <div className="form-actions">
-            <button
-              type="submit"
-              className="btn btn--primary"
-              disabled={bulkBusy || bulkNew.length === 0}
-            >
-              {bulkBusy
-                ? 'Menyimpan…'
-                : `Tambah ${bulkNew.length} Kelas`}
-            </button>
-            {bulkText && (
-              <button
-                type="button"
-                className="btn btn--ghost"
-                onClick={() => setBulkText('')}
-                disabled={bulkBusy}
-              >
-                Bersihkan
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label className="field">
+                <span>Tingkat untuk semua</span>
+                <select value={bulkGrade} onChange={(e) => setBulkGrade(e.target.value)}>
+                  <option value="X">X</option><option value="XI">XI</option><option value="XII">XII</option><option value="">-</option>
+                </select>
+              </label>
+              <button type="submit" className="btn btn--primary" disabled={bulkBusy || bulkNew.length === 0}>
+                {bulkBusy ? 'Menyimpan…' : `Tambah ${bulkNew.length} Kelas`}
               </button>
-            )}
+            </div>
           </div>
         </form>
       )}
@@ -322,35 +217,87 @@ export default function ClassesAdminPage() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Nama</th>
-                  <th>Tingkat</th>
-                  <th>Urutan</th>
-                  <th>Status</th>
-                  <th>Aksi</th>
+                  <th style={{ width: '35%' }}>Nama</th>
+                  <th style={{ width: '15%' }}>Tingkat</th>
+                  <th style={{ width: '10%' }}>Urutan</th>
+                  <th style={{ width: '15%' }}>Status</th>
+                  <th style={{ width: '250px', textAlign: 'right' }}>Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {state.rows.map((r) => (
-                  <tr key={r.id}>
-                    <td><strong>{r.name}</strong></td>
-                    <td>{r.grade_level ?? '-'}</td>
-                    <td>{r.display_order}</td>
-                    <td>
-                      <span className={'status-dot ' + (r.is_active ? 'is-on' : 'is-off')}>
-                        {r.is_active ? 'Aktif' : 'Nonaktif'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="row-actions">
-                        <button type="button" className="btn btn--ghost" onClick={() => edit(r)}>Edit</button>
-                        <button type="button" className="btn btn--ghost" onClick={() => toggleActive(r)}>
-                          {r.is_active ? 'Nonaktifkan' : 'Aktifkan'}
-                        </button>
-                        <button type="button" className="btn btn--danger" onClick={() => hapus(r)}>Hapus</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {state.rows.map((r) => {
+                  const isEditing = editingId === r.id;
+                  return (
+                    <tr key={r.id} className={isEditing ? 'row-editing' : ''}>
+                      <td>
+                        {isEditing ? (
+                          <input 
+                            className="input-inline"
+                            value={editForm.name} 
+                            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} 
+                            autoFocus
+                          />
+                        ) : (
+                          <strong>{r.name}</strong>
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <select 
+                            className="input-inline"
+                            value={editForm.grade_level} 
+                            onChange={(e) => setEditForm({ ...editForm, grade_level: e.target.value })}
+                          >
+                            <option value="X">X</option><option value="XI">XI</option><option value="XII">XII</option><option value="">-</option>
+                          </select>
+                        ) : (
+                          r.grade_level ?? '-'
+                        )}
+                      </td>
+                      <td>
+                        {isEditing ? (
+                          <input 
+                            className="input-inline"
+                            type="number" 
+                            value={editForm.display_order} 
+                            onChange={(e) => setEditForm({ ...editForm, display_order: e.target.value })} 
+                          />
+                        ) : (
+                          r.display_order
+                        )}
+                      </td>
+                      <td>
+                        <span className={'status-dot ' + (r.is_active ? 'is-on' : 'is-off')}>
+                          {r.is_active ? 'Aktif' : 'Nonaktif'}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="row-actions" style={{ justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
+                          {isEditing ? (
+                            <>
+                              <button type="button" className="btn btn--primary btn-xs" onClick={() => saveEdit(r.id)} disabled={savingEdit}>
+                                <Check size={14}/> Simpan
+                              </button>
+                              <button type="button" className="btn btn--ghost btn-xs" onClick={cancelEdit} disabled={savingEdit}>
+                                <X size={14}/> Batal
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button type="button" className="btn btn--ghost btn-xs" onClick={() => startEdit(r)}>
+                                <Edit2 size={14}/> Edit
+                              </button>
+                              <button type="button" className="btn btn--ghost btn-xs" onClick={() => toggleActive(r)}>
+                                {r.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+                              </button>
+                              <button type="button" className="btn btn--danger btn-xs" onClick={() => hapus(r)}>Hapus</button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

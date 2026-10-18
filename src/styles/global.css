@@ -1957,137 +1957,65 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 .ss { position: relative; width: 100%; }
 
 .ss__trigger {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 9px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
-  font-family: inherit;
-  font-size: var(--fs-sm);
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
-  min-height: 38px;
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--text); font-family: inherit; font-size: var(--fs-sm);
+  text-align: left; cursor: pointer; transition: border-color 120ms ease, box-shadow 120ms ease; min-height: 38px;
 }
 .ss__trigger:hover { border-color: var(--border-strong); }
-.ss__trigger:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-soft);
-}
-.ss.is-open .ss__trigger {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-soft);
-}
+.ss__trigger:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+.ss.is-open .ss__trigger { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
 .ss.is-disabled .ss__trigger { opacity: 0.6; cursor: not-allowed; }
 
 .ss__value { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
-.ss__label {
-  color: var(--text);
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.ss__label { color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ss__sublabel { font-size: var(--fs-2xs); color: var(--text-muted); }
 .ss__placeholder { color: var(--text-subtle); flex: 1; }
 
 .ss__icons { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; color: var(--text-muted); }
-.ss__clear {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-xs);
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: background-color 120ms ease, color 120ms ease;
-}
+.ss__clear { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: var(--radius-xs); cursor: pointer; color: var(--text-muted); transition: background-color 120ms ease, color 120ms ease; }
 .ss__clear:hover { background: var(--surface-alt); color: var(--text); }
 .ss__chevron { transition: transform 180ms var(--ease); }
 .ss.is-open .ss__chevron { transform: rotate(180deg); }
 
+/* Menu Dropdown (Portal - Tidak akan terpotong tabel) */
 .ss__menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 50;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
   animation: ss-in 120ms var(--ease);
+  display: flex;
+  flex-direction: column;
 }
+
 @keyframes ss-in {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .ss__search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-muted);
-  background: var(--surface);
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  border-bottom: 1px solid var(--border); color: var(--text-muted); background: var(--surface);
 }
 .ss__search input {
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  font-family: inherit;
-  font-size: var(--fs-sm);
-  color: var(--text);
-  padding: 2px 0;
-  min-width: 0;
+  flex: 1; border: 0; outline: 0; background: transparent; font-family: inherit;
+  font-size: var(--fs-sm); color: var(--text); padding: 2px 0; min-width: 0;
 }
 .ss__search-clear {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--text-muted);
-  border-radius: var(--radius-xs);
-  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+  padding: 0; border: 0; background: transparent; color: var(--text-muted); border-radius: var(--radius-xs); cursor: pointer;
 }
 .ss__search-clear:hover { background: var(--surface-alt); color: var(--text); }
 
-.ss__list {
-  max-height: 260px;
-  overflow-y: auto;
-  padding: 4px;
-}
+.ss__list { max-height: 260px; overflow-y: auto; padding: 4px; }
 
 .ss__option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-  padding: 8px 10px;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text);
-  font-family: inherit;
-  font-size: var(--fs-sm);
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 100ms ease;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; padding: 8px 10px; border: 0; border-radius: var(--radius-sm);
+  background: transparent; color: var(--text); font-family: inherit; font-size: var(--fs-sm);
+  text-align: left; cursor: pointer; transition: background-color 100ms ease;
 }
 .ss__option.is-highlight { background: var(--surface-alt); }
 .ss__option.is-selected { color: var(--primary-text); font-weight: 600; }
@@ -2097,15 +2025,14 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 .ss__option-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ss__option-sublabel { font-size: var(--fs-2xs); color: var(--text-muted); font-weight: 400; }
 
-.ss__empty {
-  padding: 16px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: var(--fs-sm);
-}
+.ss__empty { padding: 16px; text-align: center; color: var(--text-muted); font-size: var(--fs-sm); }
 
-@media (max-width: 720px) {
-  .ss__list { max-height: 200px; }
+/* ============================================================
+   Perbaikan agar Teks di Toolbar Tidak Terpotong
+   ============================================================ */
+.bulk-toolbar__fields > * { 
+  flex: 1; 
+  min-width: 150px; /* Memperlebar batas minimum kolom */
 }
 /* ============ Bulk Lessons Grid ============ */
 .bulk-lessons {
@@ -3026,21 +2953,69 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
   }
 }
 
-/* ============ Game Page (Survival Mode) ============ */
-.game-container { max-width: 1000px; margin: 0 auto; padding-bottom: 40px; }
-.game-header { text-align: center; margin-bottom: var(--space-6); }
-.game-title { font-size: 2.5rem; font-weight: 800; color: var(--primary); margin: 0; letter-spacing: -1px; }
-.game-layout { display: grid; grid-template-columns: 1fr 340px; gap: var(--space-5); align-items: start; }
+/* ============================================================
+   1. GAME GLOBAL LAYOUT (Berlaku untuk semua game)
+   ============================================================ */
+.game-container { 
+  max-width: 1000px; 
+  margin: 0 auto; 
+  padding-bottom: 40px; 
+}
 
-.game-area { min-height: 420px; display: flex; flex-direction: column; justify-content: center; padding: var(--space-6); }
-.game-start { text-align: center; max-width: 400px; margin: 0 auto; width: 100%; }
-.game-icon-large { display: flex; justify-content: center; margin-bottom: var(--space-4); }
+.game-header { 
+  text-align: center; 
+  margin-bottom: var(--space-6); 
+}
+
+.game-title { 
+  font-size: 2.5rem; 
+  font-weight: 800; 
+  color: var(--primary); 
+  margin: 0; 
+  letter-spacing: -1px; 
+}
+
+/* Grid Utama: Game di Kiri, Leaderboard di Kanan */
+.game-layout { 
+  display: grid; 
+  grid-template-columns: 1fr 340px; 
+  gap: var(--space-5); 
+  align-items: start; 
+}
+
+/* Area Permainan */
+.game-area { 
+  min-height: 420px; 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: center; 
+  padding: var(--space-6); 
+}
+
+/* Layar Awal (Start Screen) */
+.game-start { 
+  text-align: center; 
+  max-width: 400px; 
+  margin: 0 auto; 
+  width: 100%; 
+}
+.game-icon-large { 
+  display: flex; 
+  justify-content: center; 
+  margin-bottom: var(--space-4); 
+}
+
+/* Warna Teks Bantuan */
 .text-primary { color: var(--primary); }
 .text-danger { color: var(--danger); }
 .text-warning { color: var(--warning); }
+.text-success { color: var(--success); }
 .text-muted { color: var(--text-subtle); opacity: 0.5; }
 .fill-danger { fill: var(--danger); color: var(--danger); }
 
+/* ============================================================
+   2. FORM & INPUT JAWABAN
+   ============================================================ */
 .game-form-grid { 
   display: grid; 
   grid-template-columns: 1fr 1fr; 
@@ -3057,93 +3032,99 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 }
 .select-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted); }
 
+/* Kotak Input & Tombol Kirim */
+.game-input-group {
+  display: flex; width: 100%; max-width: 480px; margin: 0 auto;
+  border: 2px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--surface-alt); overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.game-input-group:focus-within {
+  border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft);
+}
+.game-input-field {
+  flex: 1; min-width: 0; height: 64px; padding: 0 16px;
+  font-size: 1.75rem; font-weight: 700; color: var(--text); background: transparent;
+  border: none; outline: none; text-align: center; box-sizing: border-box;
+}
+/* Sembunyikan panah di input number */
+.game-input-field::-webkit-outer-spin-button,
+.game-input-field::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.game-input-field[type=number] { -moz-appearance: textfield; }
+
+.game-submit-btn {
+  flex-shrink: 0; height: 64px; padding: 0 28px; font-size: 1.25rem; font-weight: 700;
+  color: #fff; background: var(--primary); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;
+  white-space: nowrap; box-sizing: border-box;
+}
+.game-submit-btn:hover { filter: brightness(0.9); }
+
+/* ============================================================
+   3. STATUS BAR, TIMER & LAYAR HASIL
+   ============================================================ */
 .game-playing { text-align: center; width: 100%; }
 .game-status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
 .lives-container { display: flex; gap: 4px; }
 
-.game-timer { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-2xl); font-weight: 800; color: var(--success); margin-bottom: var(--space-4); }
+.game-timer { 
+  display: inline-flex; align-items: center; gap: 8px; 
+  font-size: var(--fs-2xl); font-weight: 800; color: var(--success); margin-bottom: var(--space-4); 
+}
 .game-timer.is-danger { color: var(--danger); animation: pulse 0.8s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
 .game-question { font-size: 4.5rem; font-weight: 800; color: var(--text); margin-bottom: var(--space-5); letter-spacing: 2px; }
 
-/* INPUT GROUP (Anti Crop) */
-.game-input-group {
-  display: flex;
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-alt);
-  overflow: hidden; 
-  transition: border-color 0.2s, box-shadow 0.2s;
-  box-sizing: border-box;
-}
-
-.game-input-group:focus-within {
-  border-color: var(--danger);
-  box-shadow: 0 0 0 4px var(--danger-soft);
-}
-
-.game-input-field {
-  flex: 1;
-  min-width: 0;
-  height: 64px;
-  padding: 0 16px;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--text);
-  background: transparent;
-  border: none;
-  outline: none;
-  text-align: center;
-  box-sizing: border-box;
-}
-
-.game-input-field::-webkit-outer-spin-button,
-.game-input-field::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.game-input-field[type=number] { -moz-appearance: textfield; }
-
-.game-submit-btn {
-  flex-shrink: 0;
-  height: 64px;
-  padding: 0 28px;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #fff;
-  background: var(--danger);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-  white-space: nowrap;
-  box-sizing: border-box;
-}
-
-.game-submit-btn:hover { background: #b91c1c; }
-
-/* Layar Hasil */
 .game-result { text-align: center; }
 .game-final-score { display: flex; flex-direction: column; gap: 4px; margin: 20px 0; }
 .game-final-score span { font-size: var(--fs-sm); color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
 .game-final-score strong { font-size: 5rem; color: var(--primary); line-height: 1; }
 
-/* Leaderboard */
+/* ============================================================
+   4. PLAYER BADGE & TOMBOL EDIT NAMA
+   ============================================================ */
+.player-badge {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--surface-alt); padding: 8px 16px;
+  border-radius: 50px; border: 1px solid var(--border);
+  margin: 16px auto; font-size: var(--fs-sm); color: var(--text);
+  width: fit-content;
+}
+.player-badge strong { color: var(--primary); margin-left: 4px; }
+
+.btn-edit-name {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text-muted); cursor: pointer; width: 28px; height: 28px;
+  border-radius: 50%; padding: 0; margin-left: 6px; transition: all 0.2s ease;
+}
+.btn-edit-name:hover { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); transform: scale(1.1); }
+.btn-edit-name svg { width: 14px; height: 14px; display: block; }
+
+/* ============================================================
+   5. LEADERBOARD (PAPAN PERINGKAT)
+   ============================================================ */
+.leaderboard-card { display: flex; flex-direction: column; }
 .leaderboard-header { display: flex; align-items: center; gap: 10px; margin-bottom: var(--space-4); border-bottom: 1px solid var(--border); padding-bottom: var(--space-3); }
 .leaderboard-header h3 { margin: 0; font-size: var(--fs-lg); }
-.leaderboard-list { display: flex; flex-direction: column; gap: 8px; }
-.leaderboard-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface-alt); border-radius: var(--radius-md); }
-.lb-rank { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--border); border-radius: 50%; font-weight: 800; font-size: var(--fs-sm); }
-.lb-info { flex: 1; display: flex; flex-direction: column; }
-.lb-info strong { font-size: var(--fs-sm); color: var(--text); }
-.lb-info span { font-size: var(--fs-2xs); color: var(--text-muted); }
-.lb-score { font-weight: 900; color: var(--primary); font-size: var(--fs-lg); }
 
+.leaderboard-list { 
+  display: flex; flex-direction: column; gap: 8px; 
+  max-height: 520px; overflow-y: auto; padding-right: 4px;
+}
+.leaderboard-list::-webkit-scrollbar { width: 6px; }
+.leaderboard-list::-webkit-scrollbar-track { background: transparent; }
+.leaderboard-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; }
+
+.leaderboard-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface-alt); border-radius: var(--radius-md); flex-shrink: 0; }
+.lb-rank { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--border); border-radius: 50%; font-weight: 800; font-size: var(--fs-sm); flex-shrink: 0; }
+.lb-info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.lb-info strong { font-size: var(--fs-sm); color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-info span { font-size: var(--fs-2xs); color: var(--text-muted); }
+.lb-score { font-weight: 900; color: var(--primary); font-size: var(--fs-lg); flex-shrink: 0; }
+
+/* Warna Juara */
 .leaderboard-item.top-1 { background: #fef3c7; border: 1px solid #f59e0b; }
 [data-theme='dark'] .leaderboard-item.top-1 { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); }
 .leaderboard-item.top-1 .lb-rank { background: #f59e0b; color: #fff; }
@@ -3156,34 +3137,765 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
 [data-theme='dark'] .leaderboard-item.top-3 { background: rgba(217, 119, 6, 0.15); border-color: rgba(217, 119, 6, 0.3); }
 .leaderboard-item.top-3 .lb-rank { background: #d97706; color: #fff; }
 
-/* Responsif Mobile */
-@media (max-width: 800px) {
+/* ============================================================
+   6. GAME HUB (HALAMAN PILIH GAME)
+   ============================================================ */
+.game-hub { max-width: 800px; margin: 0 auto; padding-top: var(--space-5); }
+.game-hub__header { text-align: center; margin-bottom: var(--space-7); }
+.game-hub__title { font-size: 2.5rem; font-weight: 800; color: var(--text); margin-bottom: var(--space-2); letter-spacing: -1px; }
+.game-hub__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); }
+
+.game-hub-card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-6); text-decoration: none; transition: all 0.3s var(--ease); position: relative; overflow: hidden; }
+.game-hub-card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: var(--shadow-lg); }
+.game-hub-card__icon { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: var(--radius-lg); margin-bottom: var(--space-5); }
+.game-hub-card__title { font-size: var(--fs-xl); font-weight: 700; color: var(--text); margin-bottom: var(--space-2); }
+.game-hub-card__desc { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.6; margin-bottom: var(--space-6); flex: 1; }
+.game-hub-card__footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+.game-hub-card__arrow { color: var(--text-subtle); transition: transform 0.3s var(--ease), color 0.3s var(--ease); }
+.game-hub-card:hover .game-hub-card__arrow { transform: translateX(4px); color: var(--primary); }
+
+.badge--danger { background: var(--danger-soft); color: var(--danger); }
+.badge--info { background: var(--info-soft); color: var(--info); }
+
+/* ============================================================
+   7. SPESIFIK TEBAK KATA
+   ============================================================ */
+.word-display { font-size: 3.5rem; font-weight: 800; letter-spacing: 12px; color: var(--primary); text-align: center; margin: 20px 0; font-family: monospace; }
+.word-display__highlight { color: var(--warning); text-shadow: 0 0 12px rgba(245, 158, 11, 0.5); }
+
+.word-hint-container { display: flex; justify-content: center; min-height: 44px; margin-top: 16px; }
+.btn-hint { font-size: var(--fs-sm); padding: 8px 16px; border-radius: var(--radius-full); border: 1px dashed var(--border-strong); }
+.btn-hint:hover { background: var(--surface-alt); border-style: solid; }
+.word-hint { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: var(--fs-sm); color: var(--warning); background: var(--warning-soft); padding: 10px 20px; border-radius: var(--radius-full); max-width: 100%; border: 1px solid rgba(245, 158, 11, 0.3); }
+.animate-in { animation: fadeInScale 0.3s var(--ease); }
+@keyframes fadeInScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+/* ============================================================
+   8. SPESIFIK SNAKE
+   ============================================================ */
+.snake-playing { display: flex; flex-direction: column; align-items: center; }
+.snake-canvas { border: 4px solid var(--border-strong); border-radius: var(--radius-md); background: #141517; max-width: 100%; height: auto; box-shadow: var(--shadow-md); }
+.snake-dpad { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 20px; }
+.snake-dpad-row { display: flex; gap: 40px; }
+.snake-dpad button { background: var(--surface-alt); border: 1px solid var(--border); color: var(--text); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-sm); transition: all 0.1s; }
+.snake-dpad button:active { background: var(--primary-soft); transform: scale(0.95); }
+
+/* ============================================================
+   9. SPESIFIK MEMORY GAME
+   ============================================================ */
+.memory-playing { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.memory-grid { display: grid; gap: 12px; width: 100%; max-width: 550px; perspective: 1000px; margin: 0 auto; }
+.memory-card { aspect-ratio: 1 / 1; cursor: pointer; background-color: transparent; }
+.memory-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; }
+.memory-card.is-flipped .memory-card-inner, .memory-card.is-matched .memory-card-inner { transform: rotateY(180deg); }
+.memory-card-front, .memory-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
+.memory-card-front { background: var(--surface-alt); border: 2px solid var(--border); color: var(--text-subtle); }
+.memory-q { font-size: 2rem; font-weight: 800; opacity: 0.4; }
+.memory-card-back { background: var(--surface); border: 2px solid var(--primary); color: var(--text); transform: rotateY(180deg); padding: 8px; }
+.memory-card.is-matched .memory-card-back { background: var(--success-soft); border-color: var(--success); color: var(--success); box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+.memory-text { font-size: 0.85rem; font-weight: 700; line-height: 1.2; text-align: center; word-break: break-word; }
+
+/* ============================================================
+   10. RESPONSIF MOBILE (TAMPILAN HP & TABLET)
+   ============================================================ */
+@media (max-width: 900px) {
   .game-layout { grid-template-columns: 1fr; }
-  .game-question { font-size: 3rem; }
+  .game-area { padding: var(--space-4); }
   .game-form-grid { grid-template-columns: 1fr; }
   
-  .game-input-group {
+  .game-input-group { flex-direction: column; border: none; background: transparent; overflow: visible; gap: 12px; }
+  .game-input-field { height: 56px; font-size: 1.5rem; border: 2px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-alt); width: 100%; }
+  .game-input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+  .game-submit-btn { height: 56px; border-radius: var(--radius-lg); width: 100%; }
+  
+  .game-hub__grid { grid-template-columns: 1fr; }
+  .game-hub__title { font-size: 2rem; }
+  
+  .memory-grid { gap: 6px; max-width: 100%; }
+  .memory-text { font-size: 0.65rem; }
+  .memory-card-back svg { width: 28px !important; height: 28px !important; }
+  
+  .word-display { font-size: 2rem; letter-spacing: 6px; }
+  
+  .snake-dpad { display: flex; } /* Tampilkan D-Pad di HP */
+}
+
+/* ============================================================
+   1. ADMIN: FORM JADWAL RINGKAS (3 KOTAK SEJAJAR)
+   ============================================================ */
+.compact-forms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  align-items: stretch;
+}
+
+.compact-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-xs);
+  height: 100%;
+  gap: 12px;
+}
+
+.compact-title {
+  font-size: var(--fs-sm);
+  margin: 0;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.compact-body {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.compact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.compact-field > span {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.compact-field input,
+.compact-field select {
+  height: 38px;
+  padding: 0 10px;
+  font-size: var(--fs-sm);
+  box-sizing: border-box;
+  margin: 0;
+  width: 100%;
+  background-color: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.compact-field input:focus,
+.compact-field select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.compact-btn {
+  height: 38px;
+  padding: 0 12px;
+  font-size: var(--fs-sm);
+  margin: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+/* Memperbaiki Dropdown (Select) */
+.compact-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239ca3af%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 10px;
+  padding-right: 30px;
+  cursor: pointer;
+}
+
+.compact-field select option {
+  background-color: var(--surface);
+  color: var(--text);
+}
+.compact-field select option:checked,
+.compact-field select option:hover {
+  background-color: var(--primary-soft) !important;
+  color: var(--primary-text) !important;
+}
+
+/* Memperbaiki Ikon Kalender */
+input[type="date"] {
+  font-family: inherit;
+  color: var(--text);
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  padding: 2px;
+  transition: background-color 0.2s, filter 0.2s;
+}
+[data-theme='dark'] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.6;
+}
+[data-theme='light'] input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.6;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: var(--primary-soft);
+}
+
+
+/* ============================================================
+   2. ADMIN: EDITOR JADWAL (TAB & HEADER)
+   ============================================================ */
+.stack-simple { display: flex; flex-direction: column; gap: 16px; }
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.editor-header__left { display: flex; align-items: center; gap: 12px; }
+.editor-header__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-icon { padding: 8px; border-radius: 50%; }
+
+.editor-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 0;
+  overflow-x: auto;
+}
+.editor-tab {
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.editor-tab:hover { color: var(--text); }
+.editor-tab.is-active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.period-nav-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+}
+.period-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.period-tabs__link {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent; color: var(--text-muted);
+  font-size: var(--fs-sm); font-weight: 500; cursor: pointer;
+}
+.period-tabs__link:hover { background: var(--surface-alt); }
+.period-tabs__link.is-active {
+  background: var(--primary-soft); color: var(--primary-text);
+  border-color: var(--primary);
+  font-weight: 700;
+}
+.period-tabs__count {
+  background: var(--surface-alt); color: var(--text-muted);
+  padding: 2px 6px; border-radius: 10px; font-size: 10px;
+}
+.period-tabs__link.is-active .period-tabs__count {
+  background: var(--primary); color: #fff;
+}
+.period-header-compact {
+  display: flex; align-items: center; gap: 8px;
+  font-size: var(--fs-sm); font-weight: 600;
+}
+
+
+/* ============================================================
+   3. ADMIN: BULK LESSONS (ISI BANYAK SEKALIGUS)
+   ============================================================ */
+.bulk-lessons { display: flex; flex-direction: column; gap: 12px; }
+
+.bulk-toolbar-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.bulk-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  flex-wrap: wrap;
+}
+
+.bulk-toolbar-row--bottom {
+  background: var(--surface-alt);
+  border-top: 1px dashed var(--border);
+  justify-content: space-between;
+}
+
+.bulk-toolbar__label {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--warning); font-size: var(--fs-xs); font-weight: 700;
+  white-space: nowrap;
+}
+.bulk-toolbar__fields { display: flex; gap: 8px; flex: 1; min-width: 280px; }
+.bulk-toolbar__fields > * { flex: 1; min-width: 100px; }
+.bulk-toolbar__actions { display: flex; gap: 6px; }
+
+.bulk-toolbar__clear { display: flex; gap: 8px; flex-wrap: wrap; }
+.bulk-toolbar__save { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+.bulk-stats { display: flex; gap: 10px; font-size: var(--fs-xs); font-weight: 600; }
+
+.bulk-grid-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  -webkit-overflow-scrolling: touch;
+}
+.bulk-grid { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); min-width: 700px; }
+.bulk-grid thead th {
+  text-align: left; padding: 10px 12px; background: var(--surface-alt);
+  color: var(--text-muted); font-weight: 600; font-size: var(--fs-2xs);
+  text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 2;
+}
+.bulk-grid tbody tr { border-bottom: 1px solid var(--border); transition: background-color 100ms ease; }
+.bulk-grid tbody tr:last-child { border-bottom: 0; }
+.bulk-grid tbody tr:hover { background: var(--surface-alt); }
+.bulk-grid tbody tr[data-status='complete'] { background: color-mix(in srgb, var(--success-soft) 20%, transparent); }
+.bulk-grid tbody tr[data-status='partial'] { background: color-mix(in srgb, var(--warning-soft) 20%, transparent); }
+.bulk-grid tbody tr.is-selected { background: var(--primary-soft) !important; }
+
+.bulk-grid td { padding: 8px 10px; vertical-align: middle; }
+.bulk-grid__class { width: 100px; white-space: nowrap; }
+.bulk-grid__status { width: 50px; text-align: center; }
+.bulk-grid__action { width: 40px; text-align: center; }
+.dot { font-size: 12px; line-height: 1; }
+.dot--success { color: var(--success); }
+.dot--warning { color: var(--warning); }
+.dot--muted { color: var(--text-subtle); opacity: 0.5; }
+
+
+/* ============================================================
+   4. GAME GLOBAL & HUB
+   ============================================================ */
+.game-container { max-width: 1000px; margin: 0 auto; padding-bottom: 40px; }
+.game-header { text-align: center; margin-bottom: var(--space-6); }
+.game-title { font-size: 2.5rem; font-weight: 800; color: var(--primary); margin: 0; letter-spacing: -1px; }
+.game-layout { display: grid; grid-template-columns: 1fr 340px; gap: var(--space-5); align-items: start; }
+.game-area { min-height: 420px; display: flex; flex-direction: column; justify-content: center; padding: var(--space-6); }
+
+.game-hub { max-width: 800px; margin: 0 auto; padding-top: var(--space-5); }
+.game-hub__header { text-align: center; margin-bottom: var(--space-7); }
+.game-hub__title { font-size: 2.5rem; font-weight: 800; color: var(--text); margin-bottom: var(--space-2); letter-spacing: -1px; }
+.game-hub__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); }
+.game-hub-card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: var(--space-6); text-decoration: none; transition: all 0.3s var(--ease); position: relative; overflow: hidden; }
+.game-hub-card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: var(--shadow-lg); }
+.game-hub-card__icon { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: var(--radius-lg); margin-bottom: var(--space-5); }
+.game-hub-card__title { font-size: var(--fs-xl); font-weight: 700; color: var(--text); margin-bottom: var(--space-2); }
+.game-hub-card__desc { font-size: var(--fs-sm); color: var(--text-muted); line-height: 1.6; margin-bottom: var(--space-6); flex: 1; }
+.game-hub-card__footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+.game-hub-card__arrow { color: var(--text-subtle); transition: transform 0.3s var(--ease), color 0.3s var(--ease); }
+.game-hub-card:hover .game-hub-card__arrow { transform: translateX(4px); color: var(--primary); }
+
+
+/* ============================================================
+   5. GAME: MATH & TEBAK KATA
+   ============================================================ */
+.game-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; text-align: left; }
+.field--wide { grid-column: 1 / -1; }
+.select-wrapper { position: relative; }
+.select-wrapper select {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-family: inherit; font-size: var(--fs-sm); background: var(--surface); color: var(--text);
+  appearance: none; cursor: pointer;
+}
+.select-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted); }
+
+.game-playing { text-align: center; width: 100%; }
+.game-status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4); }
+.lives-container { display: flex; gap: 4px; }
+.game-timer { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-2xl); font-weight: 800; color: var(--success); margin-bottom: var(--space-4); }
+.game-timer.is-danger { color: var(--danger); animation: pulse 0.8s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+.game-question { font-size: 4.5rem; font-weight: 800; color: var(--text); margin-bottom: var(--space-5); letter-spacing: 2px; }
+.game-input-group { display: flex; width: 100%; max-width: 480px; margin: 0 auto; border: 2px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-alt); overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box; }
+.game-input-group:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+.game-input-field { flex: 1; min-width: 0; height: 64px; padding: 0 16px; font-size: 1.75rem; font-weight: 700; color: var(--text); background: transparent; border: none; outline: none; text-align: center; box-sizing: border-box; }
+.game-submit-btn { flex-shrink: 0; height: 64px; padding: 0 28px; font-size: 1.25rem; font-weight: 700; color: #fff; background: var(--primary); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; white-space: nowrap; box-sizing: border-box; }
+.game-submit-btn:hover { filter: brightness(0.9); }
+
+.word-display { font-size: 3.5rem; font-weight: 800; letter-spacing: 12px; color: var(--primary); text-align: center; margin: 20px 0; font-family: monospace; }
+.word-display__highlight { color: var(--warning); text-shadow: 0 0 12px rgba(245, 158, 11, 0.5); }
+.word-hint-container { display: flex; justify-content: center; min-height: 44px; margin-top: 16px; }
+.btn-hint { font-size: var(--fs-sm); padding: 8px 16px; border-radius: var(--radius-full); border: 1px dashed var(--border-strong); }
+.btn-hint:hover { background: var(--surface-alt); border-style: solid; }
+.word-hint { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: var(--fs-sm); color: var(--warning); background: var(--warning-soft); padding: 10px 20px; border-radius: var(--radius-full); max-width: 100%; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+
+/* ============================================================
+   6. GAME: SNAKE
+   ============================================================ */
+.snake-playing { display: flex; flex-direction: column; align-items: center; }
+.snake-canvas { border: 4px solid var(--border-strong); border-radius: var(--radius-md); background: #141517; max-width: 100%; height: auto; box-shadow: var(--shadow-md); }
+.snake-dpad { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 20px; }
+.snake-dpad-row { display: flex; gap: 40px; }
+.snake-dpad button { background: var(--surface-alt); border: 1px solid var(--border); color: var(--text); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: var(--shadow-sm); transition: all 0.1s; }
+.snake-dpad button:active { background: var(--primary-soft); transform: scale(0.95); }
+
+
+/* ============================================================
+   7. GAME: MEMORY MATCH
+   ============================================================ */
+.memory-playing { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.memory-grid { display: grid; gap: 12px; width: 100%; max-width: 550px; perspective: 1000px; margin: 0 auto; }
+.memory-card { aspect-ratio: 1 / 1; cursor: pointer; background-color: transparent; }
+.memory-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-style: preserve-3d; }
+.memory-card.is-flipped .memory-card-inner, .memory-card.is-matched .memory-card-inner { transform: rotateY(180deg); }
+.memory-card-front, .memory-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
+.memory-card-front { background: var(--surface-alt); border: 2px solid var(--border); color: var(--text-subtle); }
+.memory-q { font-size: 2rem; font-weight: 800; opacity: 0.4; }
+.memory-card-back { background: var(--surface); border: 2px solid var(--primary); color: var(--text); transform: rotateY(180deg); padding: 8px; }
+.memory-card.is-matched .memory-card-back { background: var(--success-soft); border-color: var(--success); color: var(--success); box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); }
+.memory-text { font-size: 0.85rem; font-weight: 700; line-height: 1.2; text-align: center; word-break: break-word; }
+
+
+/* ============================================================
+   8. LEADERBOARD & PLAYER BADGE
+   ============================================================ */
+.player-badge { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface-alt); padding: 8px 16px; border-radius: 50px; border: 1px solid var(--border); margin: 16px auto; font-size: var(--fs-sm); color: var(--text); width: fit-content; }
+.player-badge strong { color: var(--primary); margin-left: 4px; }
+.btn-edit-name { display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; width: 28px; height: 28px; border-radius: 50%; padding: 0; margin-left: 6px; transition: all 0.2s ease; }
+.btn-edit-name:hover { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); transform: scale(1.1); }
+.btn-edit-name svg { width: 14px; height: 14px; display: block; }
+
+.leaderboard-card { display: flex; flex-direction: column; }
+.leaderboard-header { display: flex; align-items: center; gap: 10px; margin-bottom: var(--space-4); border-bottom: 1px solid var(--border); padding-bottom: var(--space-3); }
+.leaderboard-header h3 { margin: 0; font-size: var(--fs-lg); }
+.leaderboard-list { display: flex; flex-direction: column; gap: 8px; max-height: 520px; overflow-y: auto; padding-right: 4px; }
+.leaderboard-list::-webkit-scrollbar { width: 6px; }
+.leaderboard-list::-webkit-scrollbar-track { background: transparent; }
+.leaderboard-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; }
+.leaderboard-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface-alt); border-radius: var(--radius-md); flex-shrink: 0; }
+.lb-rank { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--border); border-radius: 50%; font-weight: 800; font-size: var(--fs-sm); flex-shrink: 0; }
+.lb-info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.lb-info strong { font-size: var(--fs-sm); color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-info span { font-size: var(--fs-2xs); color: var(--text-muted); }
+.lb-score { font-weight: 900; color: var(--primary); font-size: var(--fs-lg); flex-shrink: 0; }
+.leaderboard-item.top-1 { background: #fef3c7; border: 1px solid #f59e0b; }
+[data-theme='dark'] .leaderboard-item.top-1 { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); }
+.leaderboard-item.top-1 .lb-rank { background: #f59e0b; color: #fff; }
+.leaderboard-item.top-2 { background: #f1f5f9; border: 1px solid #94a3b8; }
+[data-theme='dark'] .leaderboard-item.top-2 { background: rgba(148, 163, 184, 0.15); border-color: rgba(148, 163, 184, 0.3); }
+.leaderboard-item.top-2 .lb-rank { background: #94a3b8; color: #fff; }
+.leaderboard-item.top-3 { background: #ffedd5; border: 1px solid #d97706; }
+[data-theme='dark'] .leaderboard-item.top-3 { background: rgba(217, 119, 6, 0.15); border-color: rgba(217, 119, 6, 0.3); }
+.leaderboard-item.top-3 .lb-rank { background: #d97706; color: #fff; }
+
+
+/* ============================================================
+   9. RESPONSIF MOBILE (TAMPILAN HP)
+   ============================================================ */
+@media (max-width: 900px) {
+  /* Game Layout */
+  .game-layout { grid-template-columns: 1fr; }
+  .game-area { padding: var(--space-4); }
+  .game-form-grid { grid-template-columns: 1fr; }
+  .game-input-group { flex-direction: column; border: none; background: transparent; overflow: visible; gap: 12px; }
+  .game-input-field { height: 56px; font-size: 1.5rem; border: 2px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-alt); width: 100%; }
+  .game-input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+  .game-submit-btn { height: 56px; border-radius: var(--radius-lg); width: 100%; }
+  
+  /* Game Hub */
+  .game-hub__grid { grid-template-columns: 1fr; }
+  .game-hub__title { font-size: 2rem; }
+  
+  /* Memory */
+  .memory-grid { gap: 6px; max-width: 100%; }
+  .memory-text { font-size: 0.65rem; }
+  .memory-card-back svg { width: 28px !important; height: 28px !important; }
+  
+  /* Word */
+  .word-display { font-size: 2rem; letter-spacing: 6px; }
+  
+  /* Admin Forms */
+  .compact-forms-grid { grid-template-columns: 1fr 1fr; }
+  .editor-header { flex-direction: column; align-items: stretch; gap: 12px; }
+  .editor-header__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .editor-header__actions .btn { width: 100%; justify-content: center; }
+  .editor-tabs { padding-bottom: 4px; }
+  .editor-tab { flex-shrink: 0; padding: 10px 12px; font-size: 13px; }
+  .period-nav-wrapper { flex-direction: column; align-items: stretch; gap: 10px; }
+  .period-header-compact { justify-content: space-between; }
+
+  /* Bulk Lessons Toolbar */
+  .bulk-toolbar-row { flex-direction: column; align-items: stretch; }
+  .bulk-toolbar__fields { flex-direction: column; width: 100%; min-width: 0; }
+  .bulk-toolbar__fields > * { width: 100%; }
+  .bulk-toolbar__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bulk-toolbar-row--bottom { flex-direction: column; align-items: stretch; gap: 12px; }
+  .bulk-toolbar__clear { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bulk-toolbar__save { margin-left: 0; justify-content: space-between; width: 100%; padding-top: 12px; border-top: 1px dashed var(--border); }
+  
+  /* Tabel admin */
+  .bulk-grid { min-width: 650px; font-size: 12px; }
+  .bulk-grid th { padding: 8px; font-size: 10px; }
+  .bulk-grid td { padding: 6px 8px; }
+  .bulk-grid-wrap { margin-bottom: 24px; }
+}
+
+@media (max-width: 600px) {
+  .compact-forms-grid { grid-template-columns: 1fr; }
+}
+/* ============================================================
+   FORM INLINE (SEJAJAR MENYAMPING)
+   ============================================================ */
+.form-inline {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.form-inline .field {
+  margin-bottom: 0;
+  min-width: 140px;
+}
+
+.form-inline .form-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+/* Memastikan tinggi input dan tombol sama persis */
+.form-inline .field input,
+.form-inline .field select,
+.form-inline .field .ss__trigger,
+.form-inline .btn {
+  height: 38px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .form-inline {
     flex-direction: column;
-    border: none;
-    background: transparent;
-    overflow: visible;
-    gap: 12px;
+    align-items: stretch;
   }
-  .game-input-field {
-    height: 56px;
-    font-size: 1.5rem;
-    border: 2px solid var(--border);
-    border-radius: var(--radius-lg);
-    background: var(--surface-alt);
-    width: 100%;
-  }
-  .game-input-field:focus {
-    border-color: var(--danger);
-    box-shadow: 0 0 0 3px var(--danger-soft);
-  }
-  .game-submit-btn {
-    height: 56px;
-    border-radius: var(--radius-lg);
+  .form-inline .form-actions .btn {
     width: 100%;
   }
 }
+/* ============ Inline Edit Table ============ */
+.row-editing {
+  background-color: var(--surface-alt) !important;
+}
+
+.row-editing td {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Gaya input saat mengedit di dalam tabel */
+.input-inline {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-inline:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
+/* Memastikan tombol aksi tidak turun ke bawah */
+.row-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+/* ============ Country Game (Tebak Negara) ============ */
+.country-flag {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.country-flag-img {
+  height: 140px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid var(--border);
+}
+
+.country-continent {
+  text-align: center;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+/* Memperbaiki Tombol Pilihan Ganda agar Sejajar */
+.quiz-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.quiz-option-btn {
+  display: flex;
+  align-items: center;
+  text-align: left;
+  background: var(--surface-alt);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+  color: var(--text);
+}
+
+.quiz-option-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.quiz-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--border);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  font-weight: 800;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.quiz-text {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+}
+
+/* Warna Jawaban */
+.quiz-option-btn.is-correct {
+  background: var(--success-soft);
+  border-color: var(--success);
+}
+.quiz-option-btn.is-correct .quiz-letter {
+  background: var(--success);
+  color: #fff;
+}
+
+.quiz-option-btn.is-wrong {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+}
+.quiz-option-btn.is-wrong .quiz-letter {
+  background: var(--danger);
+  color: #fff;
+}
+
+.quiz-option-btn.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .quiz-options-grid {
+    grid-template-columns: 1fr;
+  }
+  .country-flag-img {
+    height: 100px;
+  }
+}
+/* ============ Chess Game ============ */
+.chess-status-bar {
+  margin-bottom: 16px;
+  text-align: center;
+  width: 100%;
+}
+
+.chess-board-wrapper {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+/* ============ Block Breaker Game ============ */
+.breaker-playing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.breaker-canvas {
+  border: 4px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: #141517;
+  max-width: 100%;
+  height: auto;
+  box-shadow: var(--shadow-md);
+  cursor: none; /* Sembunyikan kursor di area game */
+}
+
+.breaker-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  color: #fff;
+  text-align: center;
+  padding: 20px;
+}
+.breaker-overlay h2 { color: #fff; margin-bottom: 8px; }
+.breaker-overlay p { font-size: 1.2rem; margin-bottom: 20px; }
