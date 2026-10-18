@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
-import { CalendarDays, Clock, Megaphone, ShieldCheck } from 'lucide-react';
+import { CalendarDays, Clock, Megaphone, ShieldCheck, Gamepad2 } from 'lucide-react'; {/* <-- TAMBAH IKON GAMEPAD */}
 import { todayJakarta, formatDateLong } from '../utils/jakartaTime.js';
 import { RealtimeProvider } from '../contexts/RealtimeContext.jsx';
 import ConnectionIndicator from '../components/ConnectionIndicator.jsx';
@@ -11,6 +11,7 @@ const navItems = [
   { to: '/', label: 'Jadwal Hari Ini', end: true, Icon: CalendarDays },
   { to: '/sesi/KBM1', label: 'Per Sesi', Icon: Clock },
   { to: '/pengumuman', label: 'Pengumuman', Icon: Megaphone },
+  { to: '/game', label: 'Game', Icon: Gamepad2 }, // <-- MENU GAME BARU
 ];
 
 export default function PublicLayout() {
@@ -23,7 +24,6 @@ export default function PublicLayout() {
           <div className="public-header__inner">
             <Link to="/" className="brand" aria-label="WH School Schedule">
               
-              {/* LOGO PNG DI SINI */}
               <span 
                 className="brand__mark" 
                 aria-hidden="true" 

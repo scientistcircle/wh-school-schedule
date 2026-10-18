@@ -8,6 +8,7 @@ import HomePage from './pages/public/HomePage.jsx';
 import ClassSchedulePage from './pages/public/ClassSchedulePage.jsx';
 import PeriodSchedulePage from './pages/public/PeriodSchedulePage.jsx';
 import AnnouncementsPage from './pages/public/AnnouncementsPage.jsx';
+import GamePage from './pages/public/GamePage.jsx';
 
 import LoginPage from './pages/admin/LoginPage.jsx';
 import Overview from './pages/admin/Overview.jsx';
@@ -18,7 +19,8 @@ import ScheduleEditorPage from './pages/admin/ScheduleEditorPage.jsx';
 import AnnouncementsAdminPage from './pages/admin/AnnouncementsAdminPage.jsx';
 import ChangeLogsPage from './pages/admin/ChangeLogsPage.jsx';
 import SettingsPage from './pages/admin/SettingsPage.jsx';
-import AdminsPage from './pages/admin/AdminsPage.jsx'; /* <-- TAMBAHAN IMPORT BARU */
+import AdminsPage from './pages/admin/AdminsPage.jsx';
+import GameAdminPage from './pages/admin/GameAdminPage.jsx'; /* <-- IMPORT HALAMAN BARU */
 
 const Placeholder = ({ title }) => (
   <EmptyState title={title} description="Halaman ini akan diimplementasikan pada tahap berikutnya." />
@@ -33,6 +35,7 @@ export default function AppRouter() {
         <Route path="kelas/:classId" element={<ClassSchedulePage />} />
         <Route path="sesi/:periodCode" element={<PeriodSchedulePage />} />
         <Route path="pengumuman" element={<AnnouncementsPage />} />
+        <Route path="game" element={<GamePage />} />
       </Route>
 
       <Route path="/admin/login" element={<LoginPage />} />
@@ -53,9 +56,11 @@ export default function AppRouter() {
         <Route path="pengumuman" element={<AnnouncementsAdminPage />} />
         <Route path="riwayat" element={<ChangeLogsPage />} />
         <Route path="pengaturan" element={<SettingsPage />} />
+        <Route path="admins" element={<AdminsPage />} />
         
-        {/* RUTE KHUSUS SUPER ADMIN */}
-        <Route path="admins" element={<AdminsPage />} /> 
+        {/* RUTE HALAMAN LEADERBOARD GAME */}
+        <Route path="game" element={<GameAdminPage />} /> 
+        
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

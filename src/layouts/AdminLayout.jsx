@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, GraduationCap,
-  Layers, Megaphone, History, Settings, LogOut, Menu, ExternalLink, HelpCircle, ShieldCheck
+  Layers, Megaphone, History, Settings, LogOut, Menu, ExternalLink, HelpCircle, ShieldCheck, Gamepad2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
@@ -15,6 +15,7 @@ const adminNav = [
   { to: '/admin/kelas', label: 'Data Kelas', Icon: GraduationCap },
   { to: '/admin/master', label: 'Guru / Mapel / Ruang', Icon: Layers },
   { to: '/admin/pengumuman', label: 'Pengumuman', Icon: Megaphone },
+  { to: '/admin/game', label: 'Leaderboard Game', Icon: Gamepad2 }, /* <-- MENU BARU */
   { to: '/admin/riwayat', label: 'Riwayat Perubahan', Icon: History },
   { to: '/admin/pengaturan', label: 'Pengaturan', Icon: Settings },
 ];
@@ -125,10 +126,19 @@ export default function AdminLayout() {
       </div>
 
       {open && (
-        <button type="button" className="admin-scrim" aria-label="Tutup navigasi" onClick={() => setOpen(false)} />
+        <button
+          type="button"
+          className="admin-scrim"
+          aria-label="Tutup navigasi"
+          onClick={() => setOpen(false)}
+        />
       )}
 
-      <button className="floating-help" onClick={() => setShowGuide(true)} title="Buka Panduan Penggunaan">
+      <button 
+        className="floating-help" 
+        onClick={() => setShowGuide(true)}
+        title="Buka Panduan Penggunaan"
+      >
         <HelpCircle size={24} />
         <span>Bantuan</span>
       </button>
