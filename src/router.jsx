@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import PublicLayout from './layouts/PublicLayout.jsx';
 import AdminLayout from './layouts/AdminLayout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import ProtectedGameRoute from './components/ProtectedGameRoute.jsx'; 
 import EmptyState from './components/EmptyState.jsx';
 
 import HomePage from './pages/public/HomePage.jsx';
@@ -9,6 +10,7 @@ import ClassSchedulePage from './pages/public/ClassSchedulePage.jsx';
 import PeriodSchedulePage from './pages/public/PeriodSchedulePage.jsx';
 import AnnouncementsPage from './pages/public/AnnouncementsPage.jsx';
 
+import GameLoginPage from './pages/public/GameLoginPage.jsx'; 
 import GameHubPage from './pages/public/GameHubPage.jsx';
 import GamePage from './pages/public/GamePage.jsx';
 import WordGamePage from './pages/public/WordGamePage.jsx';
@@ -16,7 +18,7 @@ import SnakeGamePage from './pages/public/SnakeGamePage.jsx';
 import MemoryGamePage from './pages/public/MemoryGamePage.jsx'; 
 import CountryGamePage from './pages/public/CountryGamePage.jsx';
 import ChessGamePage from './pages/public/ChessGamePage.jsx'; 
-import BreakerGamePage from './pages/public/BreakerGamePage.jsx'; // IMPORT BARU
+import BreakerGamePage from './pages/public/BreakerGamePage.jsx'; 
 
 import LoginPage from './pages/admin/LoginPage.jsx';
 import Overview from './pages/admin/Overview.jsx';
@@ -44,15 +46,16 @@ export default function AppRouter() {
         <Route path="sesi/:periodCode" element={<PeriodSchedulePage />} />
         <Route path="pengumuman" element={<AnnouncementsPage />} />
         
-        <Route path="game" element={<GameHubPage />} />
-        <Route path="game/math" element={<GamePage />} />
-        <Route path="game/word" element={<WordGamePage />} />
-        <Route path="game/snake" element={<SnakeGamePage />} />
-        <Route path="game/memory" element={<MemoryGamePage />} />
-        <Route path="game/country" element={<CountryGamePage />} />
-        <Route path="game/chess" element={<ChessGamePage />} />
-        <Route path="game/breaker" element={<BreakerGamePage />} /> {/* RUTE BARU */}
-        
+        {/* RUTE GAME: WAJIB LOGIN */}
+        <Route path="game/login" element={<GameLoginPage />} />
+        <Route path="game" element={<ProtectedGameRoute><GameHubPage /></ProtectedGameRoute>} />
+        <Route path="game/math" element={<ProtectedGameRoute><GamePage /></ProtectedGameRoute>} />
+        <Route path="game/word" element={<ProtectedGameRoute><WordGamePage /></ProtectedGameRoute>} />
+        <Route path="game/snake" element={<ProtectedGameRoute><SnakeGamePage /></ProtectedGameRoute>} />
+        <Route path="game/memory" element={<ProtectedGameRoute><MemoryGamePage /></ProtectedGameRoute>} />
+        <Route path="game/country" element={<ProtectedGameRoute><CountryGamePage /></ProtectedGameRoute>} />
+        <Route path="game/chess" element={<ProtectedGameRoute><ChessGamePage /></ProtectedGameRoute>} />
+        <Route path="game/breaker" element={<ProtectedGameRoute><BreakerGamePage /></ProtectedGameRoute>} />
       </Route>
 
       <Route path="/admin/login" element={<LoginPage />} />

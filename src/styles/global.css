@@ -2546,6 +2546,44 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
   border-radius: var(--radius-md);
   padding: 12px 16px;
 }
+/* ============ Home Filters Layout ============ */
+.home-filters {
+  display: flex;
+  gap: var(--space-4);
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+/* Tambahan untuk Filter Kelas */
+.home-filter-class, 
+.home-filter-teacher {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+}
+
+.home-filter-teacher__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+@media (max-width: 720px) {
+  .home-filters { flex-direction: column; }
+  .home-filter-class, 
+  .home-filter-teacher { width: 100%; }
+}
+
 .home-filter-teacher__label {
   display: flex;
   align-items: center;
@@ -3899,3 +3937,940 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 .breaker-overlay h2 { color: #fff; margin-bottom: 8px; }
 .breaker-overlay p { font-size: 1.2rem; margin-bottom: 20px; }
+
+/* ============================================================
+   MEMPERAPATKAN JARAK (GAP) DI HALAMAN UTAMA
+   ============================================================ */
+
+/* Mengurangi jarak antar blok utama */
+.home-simple {
+  gap: 12px !important; 
+}
+
+.home-simple__content {
+  gap: 12px !important;
+}
+
+/* Jarak antar sesi KBM (KBM 1 ke KBM 2, dst) */
+.home-sessions {
+  gap: 12px !important; /* Sebelumnya 16px/20px */
+}
+
+/* Jarak toolbar tanggal ke filter */
+.home-toolbar {
+  margin-bottom: 0 !important;
+}
+
+/* Jarak di dalam baris filter */
+.home-filters {
+  gap: 12px !important;
+  margin-bottom: 0 !important;
+}
+
+/* Merapatkan jarak kartu jadwal sholat */
+.prayer-widget {
+  margin-bottom: 0 !important;
+}
+
+/* Memastikan jarak antar tabel KBM tidak terlalu jauh */
+.card--flush {
+  margin-bottom: 0 !important;
+}
+/* ============================================================
+   MEMBUAT JARAK ANTAR TABEL KBM SANGAT RAPAT
+   ============================================================ */
+
+/* 1. Jarak antar wadah sesi dibuat sangat kecil (misal 8px) */
+.home-sessions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important; 
+}
+
+/* 2. Mematikan margin bawaan yang bikin tabel bawah kedorong jauh */
+.home-sessions .card {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* 3. Merapatkan padding di dalam kartu KBM jika ada ruang kosong */
+.home-session-card {
+  padding: 0 !important; /* Karena tabel sudah punya padding sendiri */
+}
+
+.home-session-card .card__header {
+  padding: 10px 16px !important; /* Header KBM 1, KBM 2 dibuat lebih tipis */
+}
+
+/* ============================================================
+   PERBAIKAN TOTAL UNTUK TAMPILAN HP (MOBILE)
+   ============================================================ */
+@media (max-width: 768px) {
+  /* 1. Rapikan Header & Navigasi */
+  .public-header__inner {
+    padding: 12px;
+    gap: 12px;
+  }
+  .public-nav {
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap !important; /* Jangan turun ke bawah */
+    overflow-x: auto; /* Bisa digeser ke samping */
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .public-nav::-webkit-scrollbar { display: none; }
+  .public-nav__link {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* 2. Rapikan Judul */
+  .home-simple__title {
+    font-size: 1.5rem !important;
+  }
+  .home-simple__title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* 3. Perbaiki Toolbar Tanggal & Tombol Aksi */
+  .home-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  /* Date Navigator disusun 2 baris */
+  .date-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .date-nav__current {
+    grid-column: 1 / -1;
+    justify-content: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
+  }
+  .date-nav__input {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 0;
+  }
+
+  /* 4 TOMBOL AKSI (Bel, Cetak, WA, IG) SEJAJAR 4 KOLOM */
+  .home-actions-group {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px;
+    width: 100%;
+  }
+  .btn-action {
+    padding: 10px 0 !important;
+    justify-content: center;
+  }
+  .hide-mobile {
+    display: none !important; /* Sembunyikan teks, sisakan ikon */
+  }
+
+  /* 4. Rapikan Filter Kelas & Guru */
+  .home-filters {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .home-filter-class, 
+  .home-filter-teacher {
+    width: 100%;
+    padding: 10px 12px;
+  }
+  .home-info-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px;
+    gap: 10px;
+  }
+  .home-info-bar__section {
+    width: 100%;
+  }
+
+  /* 5. Perbaiki Jadwal Sholat (Yang Tadinya Acak-acakan) */
+  .prayer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) !important; /* Paksa jadi 3 kolom */
+    gap: 6px !important;
+  }
+  /* Hapus aturan aneh span 1.5 yang bikin berantakan */
+  .prayer-item:nth-child(4), 
+  .prayer-item:nth-child(5) {
+    grid-column: auto !important; 
+  }
+  .prayer-item {
+    padding: 8px 4px !important;
+  }
+  .prayer-label { font-size: 10px; }
+  .prayer-time { font-size: 14px; }
+
+  /* 6. Rapatkan Jarak Antar Blok */
+  .home-simple,
+  .home-simple__content,
+  .home-sessions {
+    gap: 12px !important;
+  }
+}
+/* Sembunyikan tombol edit nama di semua game */
+.btn-edit-name {
+  display: none !important;
+}
+/* ============================================================
+   GAME LOGIN PAGE (FULL BLEED AMBIENT PS2 - SLIM & RAPI)
+   ============================================================ */
+.game-login-wrapper {
+  position: relative;
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  
+  /* Margin negatif untuk menembus batas layar */
+  margin-top: calc(var(--space-6) * -1);
+  margin-bottom: calc(var(--space-8) * -1);
+  
+  /* Padding aman agar tidak menyentuh header/footer */
+  padding: 40px 16px; 
+  min-height: calc(100vh - 130px);
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #05070a; /* Warna dasar sangat gelap */
+  overflow: hidden;
+}
+
+/* Penyesuaian untuk layar HP */
+@media (max-width: 900px) {
+  .game-login-wrapper {
+    margin-top: calc(var(--space-5) * -1);
+    margin-bottom: calc(var(--space-7) * -1);
+    padding: 24px 16px;
+  }
+}
+
+@media (max-width: 720px) {
+  .game-login-wrapper {
+    margin-top: calc(var(--space-4) * -1);
+    margin-bottom: calc(var(--space-6) * -1);
+    min-height: calc(100vh - 110px);
+  }
+}
+
+/* ============================================================
+   1. ANIMASI AMBIENT BACKGROUND (PS2 STYLE)
+   ============================================================ */
+/* ============================================================
+   ANIMASI AMBIENT BACKGROUND (PS2 STYLE - LEBIH HIDUP)
+   ============================================================ */
+.ps2-ambient-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: radial-gradient(circle at center, #0f172a 0%, #05070a 100%); /* Latar dasar gradien */
+}
+
+/* Bola-bola Cahaya (Orbs) */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  /* Blur dikurangi agar warna lebih pekat & terang */
+  filter: blur(70px); 
+  opacity: 0.9;
+  /* Animasi berdenyut dan bergerak */
+  animation: floatOrb 15s infinite ease-in-out alternate;
+}
+
+.orb-1 {
+  width: 500px; height: 500px;
+  background: #38bdf8; /* Cyan Terang */
+  top: -100px; left: -100px;
+}
+
+.orb-2 {
+  width: 450px; height: 450px;
+  background: #8b5cf6; /* Ungu Terang */
+  bottom: -100px; right: -100px;
+  animation-duration: 18s; animation-delay: -3s;
+}
+
+.orb-3 {
+  width: 350px; height: 350px;
+  background: #f43f5e; /* Pink/Merah Terang */
+  top: 40%; left: 30%;
+  animation-duration: 22s; animation-delay: -7s;
+}
+
+/* Animasi Bola Cahaya: Bergerak diagonal + Membesar/Mengecil */
+@keyframes floatOrb {
+  0% { 
+    transform: translate(0, 0) scale(1); 
+  }
+  50% { 
+    transform: translate(150px, 100px) scale(1.2); 
+  }
+  100% { 
+    transform: translate(-100px, 150px) scale(0.9); 
+  }
+}
+
+/* ============================================================
+   KOTAK LOGIN KACA (LEBIH TEMBUS PANDANG)
+   ============================================================ */
+.game-login-card {
+  position: relative;
+  z-index: 10;
+  
+  /* Background dibuat lebih transparan agar cahaya tembus */
+  background: rgba(15, 18, 25, 0.45); 
+  backdrop-filter: blur(30px); /* Efek kaca lebih tebal */
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.25); /* Pantulan cahaya */
+  border-radius: var(--radius-xl);
+  
+  padding: 24px 20px; 
+  width: 100%;
+  max-width: 380px; 
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0,0,0,0.2);
+  text-align: center;
+  color: #fff;
+  margin: auto;
+}
+
+/* ... (Sisa CSS untuk .game-login-header, form, tombol, dll biarkan seperti sebelumnya) ... *//* ============================================================
+   2. KOTAK LOGIN KACA (RAPI & BERDEMPET)
+   ============================================================ */
+.game-login-card {
+  position: relative;
+  z-index: 10;
+  
+  /* Efek Kaca */
+  background: linear-gradient(180deg, rgba(30, 35, 45, 0.6) 0%, rgba(15, 18, 25, 0.85) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-xl);
+  
+  /* PADDING DIBUAT LEBIH RINGKAS */
+  padding: 24px 20px; 
+  
+  width: 100%;
+  max-width: 380px; 
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0,0,0,0.3);
+  text-align: center;
+  color: #fff;
+  margin: auto;
+}
+
+.game-login-card .game-login-header h1,
+.game-login-card .field > span {
+  color: #fff;
+}
+
+/* Header & Ikon */
+.game-login-header {
+  margin-bottom: 16px;
+}
+
+.game-login-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  margin-bottom: 10px;
+  box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+.game-login-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.game-login-header h1 {
+  margin: 0 0 4px 0;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.game-login-header p {
+  margin: 0;
+  font-size: 11px;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+/* Tabs */
+.game-login-tabs {
+  display: flex;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.game-login-tabs button {
+  flex: 1;
+  padding: 7px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-weight: 600;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.game-login-tabs button.is-active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Form */
+.game-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Jarak antar input dirapatkan */
+  text-align: left;
+}
+
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  pointer-events: none;
+  width: 16px;
+  height: 16px;
+  transition: color 0.2s;
+}
+
+.input-with-icon input {
+  width: 100%;
+  padding: 10px 12px 10px 38px; /* Input lebih tipis */
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.input-with-icon input:focus {
+  outline: none;
+  background: rgba(0, 0, 0, 0.4);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.input-with-icon input:focus + svg {
+  color: #60a5fa;
+}
+
+.input-with-icon input:-webkit-autofill,
+.input-with-icon input:-webkit-autofill:hover, 
+.input-with-icon input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px #1a1b1e inset !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Tombol */
+.game-login-submit {
+  margin-top: 4px;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: 1px solid #2563eb;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  transition: all 0.2s;
+}
+
+.game-login-submit:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+.game-login-footer {
+  margin-top: 12px;
+  font-size: 10px;
+  color: #6b7280;
+}
+
+/* ============================================================
+   GAME HUB PAGE (LAYOUT 4 KOLOM & AMBIENT)
+   ============================================================ */
+.game-hub-wrapper {
+  position: relative;
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  margin-top: calc(var(--space-6) * -1);
+  margin-bottom: calc(var(--space-8) * -1);
+  padding: 40px 24px; 
+  min-height: calc(100vh - 130px);
+  background-color: #05070a;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+}
+
+.game-hub-content {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 1200px; /* Diperlebar untuk menampung 4 kolom */
+}
+
+/* Grid 4 Kolom */
+.game-hub__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+/* Kartu Game (Glassmorphism) */
+.game-hub-card.glass-card {
+  display: flex;
+  flex-direction: column;
+  background: rgba(15, 18, 25, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  color: #fff;
+}
+
+.game-hub-card.glass-card:hover {
+  transform: translateY(-4px);
+  background: rgba(30, 35, 45, 0.7);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+
+.game-hub-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+}
+
+.game-hub-card__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.game-hub-card__desc {
+  font-size: 12px;
+  color: #9ca3af;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  flex: 1;
+}
+
+.game-hub-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.game-hub-card__arrow {
+  color: #6b7280;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.game-hub-card:hover .game-hub-card__arrow {
+  transform: translateX(4px);
+  color: #fff;
+}
+
+/* Responsif Layar (Tablet & HP) */
+@media (max-width: 1024px) {
+  .game-hub__grid {
+    grid-template-columns: repeat(2, 1fr); /* 2 kolom di tablet */
+  }
+}
+
+@media (max-width: 640px) {
+  .game-hub-wrapper {
+    padding: 24px 16px;
+    margin-top: calc(var(--space-4) * -1);
+    margin-bottom: calc(var(--space-6) * -1);
+  }
+  .game-hub__grid {
+    grid-template-columns: 1fr; /* 1 kolom di HP */
+  }
+  .game-hub__header {
+    text-align: left;
+  }
+  .game-hub__header div {
+    position: static !important;
+    margin-bottom: 16px;
+  }
+}
+/* ============================================================
+   AMBIENT BACKGROUND UNTUK SEMUA HALAMAN GAME
+   (Sangat halus, lambat, dan tidak mengganggu konsentrasi)
+   ============================================================ */
+
+/* Memastikan konten game berada di atas efek cahaya */
+.game-container {
+  position: relative;
+  z-index: 1;
+}
+
+.game-container > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Cahaya 1 (Kiri Atas - Cyan) */
+.game-container::before {
+  content: '';
+  position: fixed;
+  top: -20%; 
+  left: -20%;
+  width: 70vw; 
+  height: 70vw;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, transparent 60%);
+  border-radius: 50%;
+  animation: driftSmooth 60s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Cahaya 2 (Kanan Bawah - Ungu) */
+.game-container::after {
+  content: '';
+  position: fixed;
+  bottom: -20%; 
+  right: -20%;
+  width: 70vw; 
+  height: 70vw;
+  background: radial-gradient(circle, rgba(113, 68, 248, 0.08) 0%, transparent 60%);
+  border-radius: 50%;
+  animation: driftSmoothReverse 50s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Animasi pergerakan yang sangat lambat */
+@keyframes driftSmooth {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(10%, 10%) scale(1.1); }
+}
+
+@keyframes driftSmoothReverse {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-10%, -10%) scale(1.1); }
+}
+/* ============================================================
+   MEMBUAT PAPAN GAME & LEADERBOARD SEJAJAR SEMPURNA
+   ============================================================ */
+.game-layout {
+  align-items: start !important; /* Memaksa rata atas */
+}
+
+.game-layout > .card {
+  margin-top: 0 !important; /* Menghapus margin bawaan .card + .card */
+}
+/* ============================================================
+   MENYAMAKAN TINGGI PAPAN GAME & LEADERBOARD (FIX TOTAL)
+   ============================================================ */
+@media (min-width: 901px) {
+  .game-layout {
+    /* Memaksa kedua kolom memiliki tinggi yang persis sama */
+    align-items: stretch !important;
+  }
+
+  .leaderboard-card {
+    display: flex;
+    flex-direction: column;
+    /* KUNCI: Batasi tinggi maksimal papan peringkat agar tidak memanjang ke bawah */
+    max-height: 650px; /* Bisa diganti calc(100vh - 200px) */
+    overflow: hidden;
+  }
+
+  .leaderboard-list {
+    flex: 1;
+    overflow-y: auto; /* Membuat list skor bisa di-scroll */
+    min-height: 0; /* KUNCI UTAMA agar scroll di dalam flexbox berfungsi */
+    max-height: none !important; /* Menghapus batasan tinggi sebelumnya */
+    padding-right: 8px;
+  }
+}
+/* ============================================================
+   GAME HUD (NYAWA, SKOR, & TIMER BAR)
+   ============================================================ */
+.game-playing {
+  padding: 0 20px; /* Memberi jarak agar tidak mepet ke pinggir */
+}
+
+.game-hud {
+  width: 100%;
+  max-width: 550px; /* Sejajar dengan lebar papan/pertanyaan */
+  margin: 0 auto 20px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.game-hud__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.score-container {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  background: var(--surface-alt);
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.score-container strong {
+  color: var(--primary);
+  font-size: var(--fs-base);
+  font-weight: 800;
+}
+
+/* Timer Bar */
+.timer-bar-container {
+  position: relative;
+  height: 32px;
+  background: var(--surface-alt);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.timer-bar-fill {
+  height: 100%;
+  transition: width 1s linear, background-color 0.3s ease;
+  border-radius: 999px;
+}
+
+.timer-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--text);
+  text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+  pointer-events: none;
+}
+
+[data-theme='dark'] .timer-text {
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+/* ============================================================
+   TRIK MUTLAK MEMBUAT JUDUL & EMOJI SEJAJAR SEMPURNA
+   ============================================================ */
+.game-header,
+.game-hub__header {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+
+.game-title,
+.game-hub__title {
+  /* Hapus flex, kembali ke block biasa */
+  display: block !important; 
+  text-align: center !important;
+  width: 100% !important;
+  
+  /* TRIK: Geser teks ke kanan sebesar lebar emoji agar seimbang */
+  padding-left: 1.2em !important; 
+}
+/* ============================================================
+   GAME CHAT ROOM (MODERN & SLIM BUBBLES)
+   ============================================================ */
+.game-chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 380px;
+  margin-top: 32px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  
+  /* Latar belakang transparan agar menyatu dengan ambient */
+  background: rgba(15, 18, 25, 0.5) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.game-chat-header {
+  padding: 14px 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-weight: 700;
+  font-size: 13px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.game-chat-messages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Jarak antar pesan lebih rapat */
+}
+
+.chat-empty {
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+  margin-top: 20px;
+  font-style: italic;
+}
+
+/* Desain Bubble Modern */
+.chat-bubble {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.05); /* Abu-abu gelap transparan */
+  padding: 6px 12px; /* Lebih tipis dari sebelumnya (8px 12px) */
+  border-radius: 12px;
+  border-bottom-left-radius: 4px; /* Sudut chat lawan */
+  max-width: 85%;
+  align-self: flex-start;
+}
+
+.chat-bubble.is-me {
+  align-self: flex-end;
+  background: rgba(59, 130, 246, 0.15); /* Biru transparan */
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  border-bottom-right-radius: 4px; /* Sudut chat sendiri */
+  border-bottom-left-radius: 12px;
+}
+
+.chat-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: #9ca3af;
+  margin-bottom: 2px;
+  letter-spacing: 0.3px;
+}
+
+.chat-bubble.is-me .chat-name {
+  color: #60a5fa;
+  text-align: right;
+}
+
+.chat-text {
+  color: #e5e7eb;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* Area Input Chat */
+.game-chat-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.game-chat-input input {
+  flex: 1;
+  background: transparent; /* Menghilangkan kotak input, menyatu dengan background */
+  border: none;
+  padding: 8px 0;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.game-chat-input input:focus {
+  outline: none;
+}
+
+.game-chat-input input::placeholder {
+  color: #4b5563;
+}
+
+.game-chat-input button {
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px; /* Kotak membulat, bukan bulat penuh */
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.game-chat-input button:hover:not(:disabled) {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.game-chat-input button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

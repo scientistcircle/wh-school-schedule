@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { 
   Users, CalendarDays, ArrowRight, UserSearch, Clock, 
-  Printer, Camera, MessageCircle, Hourglass 
+  Printer, Camera, MessageCircle, Hourglass, GraduationCap
 } from 'lucide-react';
 import { useSchoolDay } from '../../hooks/useSchoolDay.js';
 import { useAnnouncements } from '../../hooks/useAnnouncements.js';
 import { useAutoRefresh } from '../../hooks/useAutoRefresh.js';
 import { useAsync } from '../../hooks/useAsync.js';
 import { useJakartaClock } from '../../hooks/useJakartaClock.js';
-import { useCountdown } from '../../hooks/useCountdown.js';
+import { useClasses } from '../../hooks/useClasses.js'; // <-- Import hook kelas
 import { getActiveTeachers } from '../../services/masterService.js';
 import { todayJakarta, formatDateLong, formatTime } from '../../utils/jakartaTime.js';
 import { PERIOD_LABEL } from '../../utils/constants.js';
@@ -24,15 +24,10 @@ import PrayerSchedule from '../../components/PrayerSchedule.jsx';
 import BellNotifier from '../../components/BellNotifier.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
 
-// Komponen kecil untuk hitung mundur
 function CountdownDisplay({ endTime }) {
-  const time = useCountdown(endTime);
-  if (!time || time.isFinished) return null;
-  return (
-    <span className="countdown-badge">
-      <Hourglass size={12} /> Sisa: {String(time.hours).padStart(2, '0')}:{String(time.minutes).padStart(2, '0')}:{String(time.seconds).padStart(2, '0')}
-    </span>
-  );
+  const time = useJakartaClock();
+  if (!time) return null;
+  return null; 
 }
 
 export default function HomePage() {
@@ -47,18 +42,34 @@ export default function HomePage() {
   const { data, loading, error, refetch } = useSchoolDay(today);
   const ann = useAnnouncements(3);
   const teachersState = useAsync(() => getActiveTeachers(), []);
+  const classesState = useClasses(); // <-- Panggil data kelas
   useAutoRefresh(refetch);
 
+  const [selectedClass, setSelectedClass] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState('');
 
+  // Filter Pelajaran berdasarkan Kelas dan Guru
   const filteredLessons = (data?.lessons ?? []).filter((l) => {
-    if (!selectedTeacher) return true;
-    return l.teacher?.id === selectedTeacher || l.substitute_teacher?.id === selectedTeacher;
+    // Filter Kelas (jika dipilih)
+    if (selectedClass && l.class?.id !== selectedClass) {
+      return false;
+    }
+    // Filter Guru (jika dipilih)
+    if (selectedTeacher) {
+      const isTeacher = l.teacher?.id === selectedTeacher || l.substitute_teacher?.id === selectedTeacher;
+      if (!isTeacher) return false;
+    }
+    return true;
   });
 
   const teacherOptions = (teachersState.data ?? []).map((t) => ({
     value: t.id,
     label: t.name,
+  }));
+
+  const classOptions = (classesState.data ?? []).map((c) => ({
+    value: c.id,
+    label: c.name,
   }));
 
   function generateShareText() {
@@ -147,7 +158,22 @@ export default function HomePage() {
 
       {data && (
         <div className="home-simple__content">
+          
+          {/* BARIS FILTER (KELAS & GURU) */}
           <div className="home-filters no-print">
+            <div className="home-filter-class">
+              <span className="home-filter-teacher__label">
+                <GraduationCap size={16} /> Cari Kelasmu
+              </span>
+              <SearchableSelect
+                value={selectedClass}
+                onChange={setSelectedClass}
+                options={classOptions}
+                placeholder="— Semua Kelas —"
+                searchPlaceholder="Ketik kelas (misal: X1)…"
+              />
+            </div>
+
             <div className="home-filter-teacher">
               <span className="home-filter-teacher__label">
                 <UserSearch size={16} /> Cari Jadwal Guru
@@ -160,8 +186,9 @@ export default function HomePage() {
                 searchPlaceholder="Ketik nama guru…"
               />
             </div>
-            
-            <div className="home-info-bar" style={{ flex: 1 }}>
+
+            {/* Info Bar (Piket & Agenda) */}
+            <div className="home-info-bar" style={{ flex: 1, minWidth: '300px' }}>
               <div className="home-info-bar__section">
                 <span className="home-info-bar__label">
                   <Users size={14} strokeWidth={2.25} /> Guru Piket
@@ -190,14 +217,19 @@ export default function HomePage() {
           <div className="home-sessions">
             {filteredLessons.length === 0 ? (
               <EmptyState 
-                title={selectedTeacher ? "Guru tidak mengajar hari ini" : "Belum ada pelajaran"} 
-                description={selectedTeacher ? "Coba pilih nama guru lain atau lihat tanggal berbeda." : ""}
+                title="Tidak ada jadwal" 
+                description={
+                  selectedClass ? "Kelas ini tidak memiliki jadwal pada hari ini." : 
+                  selectedTeacher ? "Guru ini tidak mengajar hari ini." : 
+                  "Belum ada pelajaran."
+                } 
               />
             ) : (
               (data?.periods ?? []).map((period) => {
                 const lessonsInPeriod = filteredLessons.filter(
                   (l) => l.period?.id === period.id
                 );
+
                 if (lessonsInPeriod.length === 0) return null;
 
                 const start = period.start_time.slice(0, 5);
@@ -217,10 +249,7 @@ export default function HomePage() {
                           {formatTime(period.start_time)}–{formatTime(period.end_time)}
                         </span>
                         {isOngoing && (
-                          <>
-                            <span className="badge badge--status-published no-print" style={{ marginLeft: '4px' }}>Sedang Berlangsung</span>
-                            <CountdownDisplay endTime={period.end_time} />
-                          </>
+                          <span className="badge badge--status-published no-print" style={{ marginLeft: '4px' }}>Sedang Berlangsung</span>
                         )}
                       </h2>
                       <Link to={`/sesi/${period.period_code}?tanggal=${today}`} className="btn btn--ghost btn--xs no-print">

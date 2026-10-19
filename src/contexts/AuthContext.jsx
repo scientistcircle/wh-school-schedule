@@ -21,12 +21,23 @@ export function AuthProvider({ children }) {
         .select('id, display_name, role')
         .eq('id', userId)
         .maybeSingle();
+      
       if (!mounted) return;
       if (error) {
-        console.error('[AuthContext] gagal memuat profil:', error.message);
         setProfile(null);
       } else {
         setProfile(data);
+        // TRIK: Otomatis isi nama pemain ke semua game
+        if (data?.display_name) {
+          const name = data.display_name;
+          localStorage.setItem('math_player_name', name);
+          localStorage.setItem('word_player_name', name);
+          localStorage.setItem('snake_player_name', name);
+          localStorage.setItem('memory_player_name', name);
+          localStorage.setItem('country_player_name', name);
+          localStorage.setItem('chess_player_name', name);
+          localStorage.setItem('breaker_player_name', name);
+        }
       }
     }
 
@@ -59,7 +70,12 @@ export function AuthProvider({ children }) {
       loading,
       signIn: (email, password) =>
         supabase.auth.signInWithPassword({ email, password }),
-      signOut: () => supabase.auth.signOut(),
+      signOut: () => {
+        // Hapus memori nama saat logout
+        const keys = ['math', 'word', 'snake', 'memory', 'country', 'chess', 'breaker'];
+        keys.forEach(k => localStorage.removeItem(`${k}_player_name`));
+        return supabase.auth.signOut();
+      },
     }),
     [session, profile, loading]
   );
