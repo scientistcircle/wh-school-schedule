@@ -4874,3 +4874,338 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   opacity: 0.3;
   cursor: not-allowed;
 }
+/* ============================================================
+   PERBAIKAN FINAL: TOMBOL BANTUAN (FLOATING)
+   ============================================================ */
+
+/* 1. Posisi Normal (Untuk Halaman Admin, Jadwal, Home, dll) */
+.floating-help {
+  position: fixed !important;
+  bottom: 24px !important; /* Menempel di pojok bawah */
+  right: 24px !important;
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--primary) !important;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+  font-family: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 9998 !important; 
+  transition: transform 0.2s, background-color 0.2s, bottom 0.3s ease;
+}
+
+.floating-help:hover {
+  background: var(--primary-hover) !important;
+  transform: translateY(-2px);
+}
+
+/* 2. Khusus di Halaman Game (Naikkan karena ada Chat di bawahnya) */
+body:has(.ig-toggle-btn) .floating-help {
+  bottom: 90px !important; 
+}
+
+/* 3. Responsif HP */
+@media (max-width: 640px) {
+  .floating-help {
+    bottom: 16px !important;
+    right: 16px !important;
+    padding: 12px !important;
+  }
+  .floating-help span {
+    display: none !important; /* Hanya ikon di HP */
+  }
+  body:has(.ig-toggle-btn) .floating-help {
+    bottom: 80px !important;
+  }
+}
+
+/* ============================================================
+   INSTAGRAM DM STYLE CHAT (RAPI & PROPORSIONAL)
+   ============================================================ */
+.floating-chat-wrapper {
+  position: fixed;
+  bottom: 24px; /* Sejajar di pojok bawah */
+  right: 24px;
+  z-index: 9999; /* Di atas tombol bantuan */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.ig-chat-container {
+  width: 350px;
+  height: 500px;
+  background: #212328;
+  border: 1px solid #262626;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; 
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin-bottom: 12px;
+  position: relative; 
+  z-index: 10000; 
+}
+
+.animate-ig-chat { animation: slideInUp 0.2s ease-out forwards; transform-origin: bottom right; }
+@keyframes slideInUp { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* --- HEADER CHAT --- */
+.ig-chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px; 
+  border-bottom: 1px solid #262626;
+  background: #212328;
+  z-index: 10;
+}
+
+.ig-chat-header-left { display: flex; align-items: center; gap: 8px; }
+.ig-icon-btn { background: transparent; border: none; color: #fff; cursor: pointer; display: flex; align-items: center; padding: 0; }
+
+.ig-header-user { display: flex; align-items: center; gap: 10px; }
+.ig-avatar-small { width: 28px; height: 28px; border-radius: 50%; background: #262626; overflow: hidden; }
+.ig-avatar-small img { width: 100%; height: 100%; object-fit: cover; }
+.ig-header-info { display: flex; flex-direction: column; line-height: 1.1; }
+.ig-header-info strong { font-size: 13px; font-weight: 600; color: #fff; }
+.ig-header-info span { font-size: 11px; color: #a8a8a8; }
+
+/* Grup Tombol A- A+ */
+.ig-chat-header-right { display: flex; align-items: center; gap: 12px; }
+.ig-font-controls { display: flex; gap: 6px; align-items: center; }
+.ig-font-btn { 
+  background: transparent; border: none; color: #fff; cursor: pointer; 
+  font-weight: 700; font-size: 12px; padding: 2px 4px;
+}
+.ig-font-btn:hover { color: #3797F0; }
+
+/* --- BODY PESAN --- */
+.ig-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+}
+
+/* Wrapper inner agar jarak bawah pas */
+.ig-chat-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 100%;
+  justify-content: flex-end; 
+}
+
+/* Grup Pesan */
+.ig-msg-group {
+  display: flex;
+  align-items: flex-end; 
+  gap: 8px;
+  max-width: 90%;
+}
+.ig-msg-group.is-me {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+/* Avatar Kecil */
+.ig-avatar-tiny {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #4a5df9; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+/* Body Pesan */
+.ig-msg-body { display: flex; flex-direction: column; max-width: 100%; }
+.ig-msg-group.is-me .ig-msg-body { align-items: flex-end; }
+.ig-msg-name { font-size: 11px; color: #a8a8a8; margin-bottom: 3px; margin-left: 2px; }
+
+/* Baris Bubble + Tombol */
+.ig-bubble-row { display: flex; align-items: center; gap: 6px; }
+.ig-msg-group.is-me .ig-bubble-row { flex-direction: row-reverse; }
+
+/* Bubble Chat */
+.ig-bubble {
+  padding: 8px 12px;
+  font-size: var(--chat-font-size, 14px);
+  line-height: 1.35;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  cursor: pointer;
+  max-width: 100%;
+}
+.ig-bubble:hover { opacity: 0.9; }
+.ig-bubble-other { background: #25292e; color: #fff; border-radius: 16px; border-bottom-left-radius: 4px; }
+.ig-bubble-me { background: #4a5df9; color: #fff; border-radius: 16px; border-bottom-right-radius: 4px; }
+
+/* Desain Reply */
+.ig-replied-quote { display: flex; flex-direction: column; gap: 2px; margin-bottom: 6px; opacity: 0.8; }
+.ig-replied-label { font-size: 10px; color: inherit; }
+.ig-replied-box { border-left: 3px solid currentColor; padding-left: 6px; background: rgba(0, 0, 0, 0.15); border-radius: 4px; padding: 3px 6px; }
+.ig-bubble-me .ig-replied-box { background: rgba(255, 255, 255, 0.15); }
+.ig-replied-text { font-size: calc(var(--chat-font-size, 14px) - 2px); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+
+/* Tombol Aksi */
+.ig-msg-actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.2s; }
+.ig-msg-group:hover .ig-msg-actions { opacity: 1; }
+.ig-action-btn {
+  background: transparent; border: none; color: #a8a8a8; cursor: pointer;
+  padding: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.ig-action-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.1); }
+.ig-action-btn.text-danger:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+
+/* Indikator Reply Bawah */
+.ig-reply-indicator {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 12px; background: #1a1a1a; border-top: 1px solid #262626;
+}
+.ig-reply-content { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #a8a8a8; }
+.ig-reply-content strong { color: #fff; }
+.ig-reply-close { background: transparent; border: none; color: #a8a8a8; cursor: pointer; padding: 2px; }
+
+/* Input Area */
+.ig-chat-input-area {
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #212328;
+}
+.ig-input-wrapper {
+  flex: 1; display: flex; align-items: center;
+  background: #262626; border-radius: 20px;
+  padding: 6px 12px; border: 1px solid #363636;
+}
+.ig-input-wrapper input {
+  flex: 1; background: transparent; border: none;
+  color: #fff; font-size: 13px; margin: 0 8px; outline: none;
+}
+.ig-input-wrapper input::placeholder { color: #a8a8a8; }
+.ig-input-icon { background: transparent; border: none; color: #fff; cursor: pointer; padding: 0; }
+.ig-send-btn { background: transparent; border: none; color: #3797F0; font-weight: 600; font-size: 13px; cursor: pointer; padding: 0; }
+.ig-send-btn:hover { color: #fff; }
+
+/* Tombol Toggle Chat */
+.ig-toggle-btn {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: var(--primary); color: #fff; border: none;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: transform 0.2s ease;
+}
+.ig-toggle-btn:hover { transform: scale(1.05); background: var(--primary-hover); }
+
+/* Responsif Mobile Chat */
+@media (max-width: 640px) {
+  .floating-chat-wrapper { bottom: 16px; right: 16px; }
+  .ig-chat-container { width: calc(100vw - 32px); height: 70vh; }
+}
+
+/* ============================================================
+   MODAL KONFIRMASI HAPUS PESAN (GAYA INSTAGRAM)
+   ============================================================ */
+.ig-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 10000; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.ig-modal-content {
+  background: #262626; 
+  width: 90%;
+  max-width: 400px;
+  border-radius: 12px;
+  overflow: hidden;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  animation: scaleIn 0.2s ease-out;
+}
+
+.ig-modal-header {
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid #363636;
+}
+
+.ig-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.ig-modal-desc {
+  font-size: 14px;
+  color: #a8a8a8;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.ig-modal-btn {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #363636;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ig-modal-btn:last-child { border-bottom: none; }
+.ig-modal-btn:hover { background: #363636; }
+.ig-modal-btn--danger { color: #ff4d4d; font-weight: 700; }
+.ig-modal-btn--cancel { color: #fff; font-weight: 400; }
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ============================================================
+   NOTIFIKASI TITIK MERAH PADA TOMBOL CHAT
+   ============================================================ */
+.ig-toggle-btn {
+  position: relative; 
+}
+
+.notification-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  background-color: #ef4444; 
+  border-radius: 50%;
+  border: 2px solid #05070a; 
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
+  animation: pulseDot 1.5s infinite;
+}
+
+@keyframes pulseDot {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}

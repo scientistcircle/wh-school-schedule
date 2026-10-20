@@ -2,7 +2,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Zap, Puzzle, ArrowRight, Gamepad2, LayoutGrid, Globe, Swords, Box, LogOut } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
-import GameChat from '../../components/GameChat.jsx'; // <-- IMPORT CHAT
 
 export default function GameHubPage() {
   const { profile, signOut } = useAuth();
@@ -92,7 +91,7 @@ export default function GameHubPage() {
         </div>
 
         {/* KOMPONEN CHAT ROOM DITARUH DI SINI */}
-        <GameChat />
+  
         
       </div>
     </div>

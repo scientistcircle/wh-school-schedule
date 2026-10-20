@@ -37,50 +37,30 @@ export default function GameLoginPage() {
     const email = formatEmail(name);
 
     if (mode === 'register') {
-      const { data: isTaken, error: rpcError } = await supabase.rpc('is_username_taken', { 
-        username: name.trim() 
-      });
-
-      if (rpcError) {
-        setBusy(false);
-        return toast.error('Terjadi kesalahan sistem. Coba lagi.');
-      }
-
-      if (isTaken) {
-        setBusy(false);
-        return toast.error('Nama ini sudah pernah dipakai. Silakan gunakan nama lain atau login jika ini akun Anda.', 6000);
-      }
+      const { data: isTaken, error: rpcError } = await supabase.rpc('is_username_taken', { username: name.trim() });
+      if (rpcError) { setBusy(false); return toast.error('Terjadi kesalahan sistem. Coba lagi.'); }
+      if (isTaken) { setBusy(false); return toast.error('Nama ini sudah pernah dipakai. Silakan gunakan nama lain atau login jika ini akun Anda.', 6000); }
 
       const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { display_name: name.trim() } },
+        email, password, options: { data: { display_name: name.trim() } },
       });
 
       if (error) {
         setBusy(false);
-        if (error.message.includes('already registered')) {
-          return toast.error('Nama ini sudah terdaftar. Silakan masuk.');
-        }
+        if (error.message.includes('already registered')) return toast.error('Nama ini sudah terdaftar. Silakan masuk.');
         return toast.error(error.message);
       }
       toast.success('Akun berhasil dibuat! Selamat bermain.');
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        setBusy(false);
-        return toast.error('Nama atau Password salah.');
-      }
+      if (error) { setBusy(false); return toast.error('Nama atau Password salah.'); }
       toast.success('Berhasil masuk!');
     }
-    
     setBusy(false);
   }
 
   return (
     <div className="game-login-wrapper">
-      
-      {/* ANIMASI BACKGROUND AMBIENT PS2 */}
       <div className="ps2-ambient-bg">
         <div className="orb orb-1"></div>
         <div className="orb orb-2"></div>
@@ -89,28 +69,14 @@ export default function GameLoginPage() {
 
       <div className="game-login-card">
         <div className="game-login-header">
-          <div className="game-login-icon">
-            <Gamepad2 size={32} />
-          </div>
+          <div className="game-login-icon"><Gamepad2 size={32} /></div>
           <h1>WH GAME HUB</h1>
           <p>Masuk untuk menyimpan skor dan bersaing di papan peringkat.</p>
         </div>
 
         <div className="game-login-tabs">
-          <button 
-            type="button" 
-            className={mode === 'login' ? 'is-active' : ''} 
-            onClick={() => setMode('login')}
-          >
-            Masuk
-          </button>
-          <button 
-            type="button" 
-            className={mode === 'register' ? 'is-active' : ''} 
-            onClick={() => setMode('register')}
-          >
-            Buat Akun
-          </button>
+          <button type="button" className={mode === 'login' ? 'is-active' : ''} onClick={() => setMode('login')}>Masuk</button>
+          <button type="button" className={mode === 'register' ? 'is-active' : ''} onClick={() => setMode('register')}>Buat Akun</button>
         </div>
 
         <form onSubmit={handleSubmit} className="game-login-form">
@@ -118,14 +84,7 @@ export default function GameLoginPage() {
             <span>Nama Panggilan</span>
             <div className="input-with-icon">
               <User size={18} />
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Contoh: Ahmad"
-                required
-                maxLength={20}
-              />
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Contoh: Ahmad" required maxLength={20} />
             </div>
           </label>
 
@@ -133,13 +92,7 @@ export default function GameLoginPage() {
             <span>Password</span>
             <div className="input-with-icon">
               <KeyRound size={18} />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimal 6 karakter"
-                required
-              />
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimal 6 karakter" required />
             </div>
           </label>
 
@@ -148,9 +101,7 @@ export default function GameLoginPage() {
           </button>
         </form>
 
-        <p className="game-login-footer">
-          Nama ini otomatis dipakai di semua game.
-        </p>
+        <p className="game-login-footer">Nama ini otomatis dipakai di semua game.</p>
       </div>
     </div>
   );

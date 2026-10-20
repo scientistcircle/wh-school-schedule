@@ -57,3 +57,12 @@ export async function toggleAnnouncementPublish(id, publish) {
     .single();
   return { data, error };
 }
+// Tambah di adminService.js, setelah fungsi createMaster
+export async function bulkCreateMaster(table, rows) {
+  if (!rows || rows.length === 0) return { data: [], error: null };
+  const { data, error } = await supabase
+    .from(table)
+    .insert(rows)
+    .select();
+  return { data: data ?? [], error };
+}

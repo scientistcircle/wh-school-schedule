@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { CalendarDays, Clock, Megaphone, ShieldCheck, Gamepad2 } from 'lucide-react';
 import { todayJakarta, formatDateLong } from '../utils/jakartaTime.js';
 import { RealtimeProvider } from '../contexts/RealtimeContext.jsx';
@@ -6,16 +6,19 @@ import ConnectionIndicator from '../components/ConnectionIndicator.jsx';
 import OfflineNotice from '../components/OfflineNotice.jsx';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import InstallPWA from '../components/InstallPWA.jsx';
+import GameChat from '../components/GameChat.jsx'; // Tambahkan import ini
 
 const navItems = [
   { to: '/', label: 'Jadwal Hari Ini', end: true, Icon: CalendarDays },
   { to: '/sesi/KBM1', label: 'Per Sesi', Icon: Clock },
   { to: '/pengumuman', label: 'Pengumuman', Icon: Megaphone },
-  { to: '/game', label: 'Game', Icon: Gamepad2 }, // Hanya 1 tombol Game
+  { to: '/game', label: 'Game', Icon: Gamepad2 }, 
 ];
 
 export default function PublicLayout() {
   const today = todayJakarta();
+  const location = useLocation(); 
+  const isGameZone = location.pathname.startsWith('/game'); // Cek apakah sedang di halaman game
 
   return (
     <RealtimeProvider>
@@ -23,19 +26,9 @@ export default function PublicLayout() {
         <header className="public-header">
           <div className="public-header__inner">
             <Link to="/" className="brand" aria-label="WH School Schedule">
-              
-              <span 
-                className="brand__mark" 
-                aria-hidden="true" 
-                style={{ overflow: 'hidden', background: 'transparent', padding: 0 }}
-              >
-                <img 
-                  src="/logo.png" 
-                  alt="Logo" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} 
-                />
+              <span className="brand__mark" aria-hidden="true" style={{ overflow: 'hidden', background: 'transparent', padding: 0 }}>
+                <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
               </span>
-
               <span className="brand__text">
                 <strong className="brand__title">WH SCHOOL SCHEDULE</strong>
                 <span className="brand__subtitle">School Timetable &amp; Daily Information</span>
@@ -44,14 +37,7 @@ export default function PublicLayout() {
 
             <nav className="public-nav" aria-label="Navigasi utama">
               {navItems.map(({ to, label, end, Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={end}
-                  className={({ isActive }) =>
-                    'public-nav__link' + (isActive ? ' is-active' : '')
-                  }
-                >
+                <NavLink key={to} to={to} end={end} className={({ isActive }) => 'public-nav__link' + (isActive ? ' is-active' : '')}>
                   <Icon size={15} strokeWidth={2} />
                   <span>{label}</span>
                 </NavLink>
@@ -76,6 +62,10 @@ export default function PublicLayout() {
         </footer>
 
         <InstallPWA />
+        
+        {/* GAMECHAT HANYA MUNCUL DI HALAMAN GAME */}
+        {isGameZone && <GameChat />}
+        
       </div>
     </RealtimeProvider>
   );

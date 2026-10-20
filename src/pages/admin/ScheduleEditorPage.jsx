@@ -153,6 +153,7 @@ export default function ScheduleEditorPage() {
             periods={state.periods}
             lessons={state.lessons}
             activities={state.activities}
+              teachers={teachers}
             onChange={load}
           />
         )}

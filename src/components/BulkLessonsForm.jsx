@@ -1,22 +1,30 @@
-import { useMemo, useState } from 'react';
-import { Save, Zap, Trash2, CheckSquare, Square, Eraser } from 'lucide-react';
+import { useMemo, useState, useRef } from 'react';
+import { Save, Zap, Trash2, CheckSquare, Square, Eraser, Upload, Download } from 'lucide-react';
+import * as XLSX from 'xlsx'; // Import library xlsx
 import SearchableSelect from './SearchableSelect.jsx';
 import { bulkUpsertLessons, deleteLesson } from '../services/adminService.js';
 import { useToast } from '../contexts/ToastContext.jsx';
 
-const EMPTY_ROW = { teacher_id: '', subject_id: '', room_id: '' };
+const EMPTY_ROW = { teacher_id: '', subject_id: '', room_id: '', substitute_teacher_id: '' };
 
 export default function BulkLessonsForm({ day, period, classes, teachers, subjects, rooms, existingLessons, onSaved }) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [selectedClasses, setSelectedClasses] = useState(new Set());
+  const fileInputRef = useRef(null); // Ref untuk input file
 
   const [rows, setRows] = useState(() => {
     const initial = {};
     for (const c of classes) {
       const existing = existingLessons.find((l) => l.class_id === c.id);
       initial[c.id] = existing
-        ? { teacher_id: existing.teacher_id ?? '', subject_id: existing.subject_id ?? '', room_id: existing.room_id ?? '', lesson_id: existing.id }
+        ? { 
+            teacher_id: existing.teacher_id ?? '', 
+            subject_id: existing.subject_id ?? '', 
+            room_id: existing.room_id ?? '', 
+            substitute_teacher_id: existing.substitute_teacher_id ?? '',
+            lesson_id: existing.id 
+          }
         : { ...EMPTY_ROW, lesson_id: null };
     }
     return initial;
@@ -25,6 +33,7 @@ export default function BulkLessonsForm({ day, period, classes, teachers, subjec
   const [bulkTeacher, setBulkTeacher] = useState('');
   const [bulkSubject, setBulkSubject] = useState('');
   const [bulkRoom, setBulkRoom] = useState('');
+  const [bulkSubstitute, setBulkSubstitute] = useState('');
 
   const teacherOptions = useMemo(() => teachers.map((t) => ({ value: t.id, label: t.name })), [teachers]);
   const subjectOptions = useMemo(() => subjects.map((s) => ({ value: s.id, label: s.name })), [subjects]);
@@ -59,34 +68,138 @@ export default function BulkLessonsForm({ day, period, classes, teachers, subjec
     else setSelectedClasses(new Set(classes.map((c) => c.id)));
   }
 
+  // =====================================================================
+  // LOGIKA UPLOAD SPREADSHEET
+  // =====================================================================
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const bstr = event.target.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
+
+        let successCount = 0;
+        let failCount = 0;
+        const newRows = { ...rows };
+
+        data.forEach((row) => {
+          // Mencari nama kolom di Excel (tidak case-sensitive)
+          const getVal = (keys) => {
+            const key = Object.keys(row).find(k => keys.includes(k.toLowerCase().trim()));
+            return key ? String(row[key]).trim() : '';
+          };
+
+          const className = getVal(['kelas', 'class']);
+          const teacherName = getVal(['guru', 'teacher']);
+          const subjectName = getVal(['mata pelajaran', 'mapel', 'subject']);
+          const roomName = getVal(['ruang', 'room']);
+          const substituteName = getVal(['guru pengganti', 'pengganti', 'substitute']);
+
+          if (!className) return; // Skip jika tidak ada nama kelas
+
+          const cls = classes.find(c => c.name.toLowerCase() === className.toLowerCase());
+          if (!cls) {
+            failCount++;
+            return; // Kelas tidak ditemukan di database
+          }
+
+          // Cari ID berdasarkan nama
+          const teacherId = teachers.find(t => t.name.toLowerCase() === teacherName.toLowerCase())?.id || '';
+          const subjectId = subjects.find(s => s.name.toLowerCase() === subjectName.toLowerCase())?.id || '';
+          const roomId = rooms.find(r => r.name.toLowerCase() === roomName.toLowerCase())?.id || '';
+          const substituteId = teachers.find(t => t.name.toLowerCase() === substituteName.toLowerCase())?.id || '';
+
+          newRows[cls.id] = {
+            ...newRows[cls.id],
+            teacher_id: teacherId,
+            subject_id: subjectId,
+            room_id: roomId,
+            substitute_teacher_id: substituteId,
+          };
+          successCount++;
+        });
+
+        setRows(newRows);
+        toast.success(`${successCount} baris berhasil diimport dari Excel.`);
+        if (failCount > 0) {
+          toast.warning(`${failCount} baris gagal karena nama kelas tidak ditemukan di sistem.`);
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error('Gagal membaca file. Pastikan format file benar.');
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = null; // Reset input agar bisa upload file yang sama
+  };
+
+  // Fungsi untuk mengunduh Template Excel
+  const downloadTemplate = () => {
+    const templateData = classes.map(c => ({
+      'Kelas': c.name,
+      'Guru': '',
+      'Mata Pelajaran': '',
+      'Ruang': '',
+      'Guru Pengganti': ''
+    }));
+    
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template Jadwal");
+    XLSX.writeFile(wb, `Template_Jadwal_${day.schedule_date}.xlsx`);
+  };
+
+  // =====================================================================
+  // LOGIKA BULK APPLY
+  // =====================================================================
   function applyBulkToSelected() {
     if (selectedClasses.size === 0) return toast.warning('Centang kelas terlebih dahulu.');
-    if (!bulkTeacher && !bulkSubject && !bulkRoom) return toast.warning('Pilih minimal satu nilai.');
+    if (!bulkTeacher && !bulkSubject && !bulkRoom && !bulkSubstitute) return toast.warning('Pilih minimal satu nilai.');
     
     setRows((prev) => {
       const next = { ...prev };
       for (const c of classes) {
         if (selectedClasses.has(c.id)) {
           const r = next[c.id] ?? EMPTY_ROW;
-          next[c.id] = { ...r, teacher_id: bulkTeacher || r.teacher_id, subject_id: bulkSubject || r.subject_id, room_id: bulkRoom || r.room_id };
+          next[c.id] = { 
+            ...r, 
+            teacher_id: bulkTeacher || r.teacher_id, 
+            subject_id: bulkSubject || r.subject_id, 
+            room_id: bulkRoom || r.room_id,
+            substitute_teacher_id: bulkSubstitute || r.substitute_teacher_id 
+          };
         }
       }
       return next;
     });
     toast.success(`Diterapkan ke ${selectedClasses.size} kelas.`);
+    setSelectedClasses(new Set()); 
   }
 
   function applyBulkToAll() {
-    if (!bulkTeacher && !bulkSubject && !bulkRoom) return toast.warning('Pilih minimal satu nilai.');
+    if (!bulkTeacher && !bulkSubject && !bulkRoom && !bulkSubstitute) return toast.warning('Pilih minimal satu nilai.');
     setRows((prev) => {
       const next = { ...prev };
       for (const c of classes) {
         const r = next[c.id] ?? EMPTY_ROW;
-        next[c.id] = { ...r, teacher_id: bulkTeacher || r.teacher_id, subject_id: bulkSubject || r.subject_id, room_id: bulkRoom || r.room_id };
+        next[c.id] = { 
+          ...r, 
+          teacher_id: bulkTeacher || r.teacher_id, 
+          subject_id: bulkSubject || r.subject_id, 
+          room_id: bulkRoom || r.room_id,
+          substitute_teacher_id: bulkSubstitute || r.substitute_teacher_id 
+        };
       }
       return next;
     });
     toast.success('Diterapkan ke semua baris.');
+    setSelectedClasses(new Set()); 
   }
 
   function clearSelected() {
@@ -97,8 +210,7 @@ export default function BulkLessonsForm({ day, period, classes, teachers, subjec
       const next = { ...prev };
       for (const c of classes) {
         if (selectedClasses.has(c.id)) {
-          // Jangan hapus lesson_id agar sistem tahu ini harus dihapus dari DB saat simpan
-          next[c.id] = { ...next[c.id], teacher_id: '', subject_id: '', room_id: '' };
+          next[c.id] = { ...next[c.id], teacher_id: '', subject_id: '', room_id: '', substitute_teacher_id: '' };
         }
       }
       return next;
@@ -111,7 +223,7 @@ export default function BulkLessonsForm({ day, period, classes, teachers, subjec
     setRows((prev) => {
       const next = { ...prev };
       for (const c of classes) {
-        next[c.id] = { ...next[c.id], teacher_id: '', subject_id: '', room_id: '' };
+        next[c.id] = { ...next[c.id], teacher_id: '', subject_id: '', room_id: '', substitute_teacher_id: '' };
       }
       return next;
     });
@@ -129,10 +241,16 @@ export default function BulkLessonsForm({ day, period, classes, teachers, subjec
       const filled = [r.teacher_id, r.subject_id, r.room_id].filter(Boolean).length;
 
       if (filled === 3) {
-        toUpsert.push({ class_id: c.id, teacher_id: r.teacher_id, subject_id: r.subject_id, room_id: r.room_id });
+        toUpsert.push({ 
+          class_id: c.id, 
+          teacher_id: r.teacher_id, 
+          subject_id: r.subject_id, 
+          room_id: r.room_id,
+          substitute_teacher_id: r.substitute_teacher_id || null 
+        });
       } else if (filled === 0) {
         if (r.lesson_id) {
-          toDelete.push(r.lesson_id); // Tandai untuk dihapus dari database
+          toDelete.push(r.lesson_id); 
         }
       } else {
         incomplete.push(c.name);
@@ -144,7 +262,6 @@ export default function BulkLessonsForm({ day, period, classes, teachers, subjec
 
     setBusy(true);
     
-    // 1. Proses Hapus
     if (toDelete.length > 0) {
       for (const id of toDelete) {
         const { error } = await deleteLesson(id);
@@ -155,7 +272,6 @@ export default function BulkLessonsForm({ day, period, classes, teachers, subjec
       }
     }
 
-    // 2. Proses Simpan/Update
     if (toUpsert.length > 0) {
       const { error } = await bulkUpsertLessons(day.id, period.id, toUpsert);
       if (error) {
@@ -190,13 +306,46 @@ export default function BulkLessonsForm({ day, period, classes, teachers, subjec
       <div className="bulk-toolbar-container">
         
         {/* BARIS 1: ISI CEPAT */}
-        <div className="bulk-toolbar-row">
-          <span className="bulk-toolbar__label"><Zap size={14} /> ISI CEPAT</span>
+        <div className="bulk-toolbar-row" style={{ flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: 'auto' }}>
+            <span className="bulk-toolbar__label"><Zap size={14} /> ISI CEPAT</span>
+            
+            {/* TOMBOL UPLOAD & TEMPLATE */}
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button 
+                type="button" 
+                className="btn btn--primary btn--xs" 
+                onClick={() => fileInputRef.current?.click()}
+                title="Upload dari Excel/CSV"
+              >
+                <Upload size={14} /> Upload
+              </button>
+              <input 
+                type="file" 
+                accept=".xlsx, .xls, .csv" 
+                ref={fileInputRef} 
+                onChange={handleFileUpload} 
+                style={{ display: 'none' }} 
+              />
+              
+              <button 
+                type="button" 
+                className="btn btn--ghost btn--xs" 
+                onClick={downloadTemplate}
+                title="Download Template Excel"
+              >
+                <Download size={14} /> Template
+              </button>
+            </div>
+          </div>
+
           <div className="bulk-toolbar__fields">
             <SearchableSelect value={bulkTeacher} onChange={setBulkTeacher} options={teacherOptions} placeholder="Guru…" searchPlaceholder="Cari…" />
             <SearchableSelect value={bulkSubject} onChange={setBulkSubject} options={subjectOptions} placeholder="Mapel…" searchPlaceholder="Cari…" />
             <SearchableSelect value={bulkRoom} onChange={setBulkRoom} options={roomOptions} placeholder="Ruang…" searchPlaceholder="Cari…" />
+            <SearchableSelect value={bulkSubstitute} onChange={setBulkSubstitute} options={teacherOptions} placeholder="Pengganti…" searchPlaceholder="Cari…" />
           </div>
+          
           <div className="bulk-toolbar__actions">
             <button type="button" className="btn btn--secondary btn--xs" onClick={applyBulkToSelected}>Ke Terpilih</button>
             <button type="button" className="btn btn--ghost btn--xs" onClick={applyBulkToAll}>Ke Semua</button>
@@ -241,6 +390,7 @@ export default function BulkLessonsForm({ day, period, classes, teachers, subjec
               <th>Guru</th>
               <th>Mata Pelajaran</th>
               <th>Ruang</th>
+              <th>Guru Pengganti</th> 
               <th className="bulk-grid__status">Status</th>
               <th className="bulk-grid__action"></th>
             </tr>
@@ -263,6 +413,15 @@ export default function BulkLessonsForm({ day, period, classes, teachers, subjec
                   <td><SearchableSelect value={r.teacher_id} onChange={(v) => updateRow(c.id, { teacher_id: v })} options={teacherOptions} placeholder="Guru…" searchPlaceholder="Cari…" /></td>
                   <td><SearchableSelect value={r.subject_id} onChange={(v) => updateRow(c.id, { subject_id: v })} options={subjectOptions} placeholder="Mapel…" searchPlaceholder="Cari…" /></td>
                   <td><SearchableSelect value={r.room_id} onChange={(v) => updateRow(c.id, { room_id: v })} options={roomOptions} placeholder="Ruang…" searchPlaceholder="Cari…" /></td>
+                  <td>
+                    <SearchableSelect 
+                      value={r.substitute_teacher_id || ''} 
+                      onChange={(v) => updateRow(c.id, { substitute_teacher_id: v })} 
+                      options={teacherOptions} 
+                      placeholder="Pengganti…" 
+                      searchPlaceholder="Cari…" 
+                    />
+                  </td>
                   <td className="bulk-grid__status">
                     {status === 'complete' && <span className="dot dot--success" title="Lengkap">●</span>}
                     {status === 'partial' && <span className="dot dot--warning" title="Setengah">●</span>}

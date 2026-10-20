@@ -17,6 +17,9 @@ export default function SearchableSelect({
   const menuRef = useRef(null);
   const inputRef = useRef(null);
   const listRef = useRef(null);
+  
+  // Ref untuk mencegah query terhapus saat user langsung mengetik
+  const skipClearQuery = useRef(false);
 
   const selected = useMemo(() => options.find((o) => o.value === value) ?? null, [options, value]);
 
@@ -52,9 +55,20 @@ export default function SearchableSelect({
 
   useEffect(() => {
     if (open) {
-      setQuery('');
+      // Hanya hapus query jika tidak dipicu oleh ketikan langsung
+      if (!skipClearQuery.current) {
+        setQuery('');
+      }
+      skipClearQuery.current = false;
       setHighlight(0);
-      requestAnimationFrame(() => inputRef.current?.focus());
+      
+      // Gunakan setTimeout (100ms) untuk memastikan elemen Portal sudah termount sempurna
+      // sebelum kita memaksa fokus ke dalam input pencarian
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
   }, [open]);
 
@@ -88,9 +102,17 @@ export default function SearchableSelect({
     if (!open) {
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
         e.preventDefault(); setOpen(true);
+      } else if (e.key.length === 1 && e.key !== ' ' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        // FITUR BARU: Jika user langsung mengetik huruf/angka saat kotak tertutup, buka dan cari
+        e.preventDefault();
+        skipClearQuery.current = true;
+        setQuery(e.key);
+        setOpen(true);
       }
       return;
     }
+    
+    // Navigasi di dalam dropdown
     if (e.key === 'ArrowDown') { e.preventDefault(); setHighlight((h) => Math.min(h + 1, filtered.length - 1)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlight((h) => Math.max(h - 1, 0)); }
     else if (e.key === 'Enter') { e.preventDefault(); const opt = filtered[highlight]; if (opt) pick(opt); }
