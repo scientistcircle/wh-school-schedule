@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>NUMBER DISCO - AdaptoX Edition</title>
+  <style>
+    /* =========================================
+       1. RESET & BASIC STYLES
+       ========================================= */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0d1219;
+      color: #fff;
+    }
+
+    /* Latar Belakang Tekstur Batu Gelap */
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: 
+        radial-gradient(circle at 50% 50%, rgba(20, 35, 55, 0.8), rgba(5, 8, 15, 0.98)),
+        repeating-linear-gradient(45deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 2px, transparent 2px, transparent 4px);
+      box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.9);
+    }
+
+    /* Canvas Latar Belakang */
+    canvas#bg-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .ui-layer {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* =========================================
+       2. LOGO & HEADER ADAPTOX
+       ========================================= */
+    .adaptox-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .adaptox-badge {
+      background: linear-gradient(180deg, #0f75bc 0%, #064b80 100%);
+      border: 2px solid #52bdff;
+      border-radius: 8px;
+      padding: 4px 18px;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      box-shadow: 0 0 15px rgba(0, 162, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.4);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .adaptox-x {
+      color: #52bdff;
+      font-size: 2.2rem;
+      font-style: italic;
+      margin-left: 2px;
+      filter: drop-shadow(0 0 8px #00a2ff);
+    }
+
+    /* =========================================
+       3. LOBBY & PEMILIHAN MODE
+       ========================================= */
+    #lobby-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+      width: 90%;
+      max-width: 480px;
+    }
+
+    .mode-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    .mode-card {
+      background: linear-gradient(135deg, rgba(30, 42, 58, 0.9), rgba(15, 23, 36, 0.95));
+      border: 2px solid #384f6e;
+      border-radius: 16px;
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    }
+
+    .mode-card:hover {
+      transform: translateY(-3px);
+      border-color: #52bdff;
+      box-shadow: 0 12px 25px rgba(0, 162, 255, 0.3);
+    }
+
+    .mode-icon {
+      font-size: 2rem;
+      width: 54px;
+      height: 54px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .card-easy .mode-icon { color: #34d399; border-color: #34d399; }
+    .card-normal .mode-icon { color: #a78bfa; border-color: #a78bfa; }
+    .card-hard .mode-icon { color: #f87171; border-color: #f87171; }
+
+    .mode-name { font-size: 1.3rem; font-weight: 800; letter-spacing: 1px; color: #e2e8f0; }
+    .mode-desc { font-size: 0.9rem; color: #94a3b8; margin-top: 2px; }
+
+    /* =========================================
+       4. BINGKAI PANELS STYLE ADAPTOX (BINGKAI BATU METALLIC)
+       ========================================= */
+    .stone-frame {
+      background: radial-gradient(circle at 50% 30%, #1c2633 0%, #0e141d 100%);
+      border: 10px solid #2d3848;
+      border-image: linear-gradient(to bottom, #4a5a70, #1a2330, #2d3848) 1;
+      box-shadow: 
+        0 0 0 2px #090d14,
+        0 20px 50px rgba(0,0,0,0.9),
+        inset 0 0 30px rgba(0,0,0,0.8);
+      border-radius: 20px;
+      position: relative;
+    }
+
+    /* Corner accent screws/plates */
+    .stone-frame::before, .stone-frame::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: radial-gradient(circle, #8a9bb0 0%, #2a3545 100%);
+      border-radius: 50%;
+      border: 1px solid #000;
+      box-shadow: inset 0 1px 2px rgba(255,255,255,0.5);
+    }
+    .stone-frame::before { top: 8px; left: 8px; }
+    .stone-frame::after { top: 8px; right: 8px; }
+
+    /* =========================================
+       5. STAGE (TAMPILAN SOAL MAROON ADAPTOX)
+       ========================================= */
+    #stage-container {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 90%;
+      max-width: 700px;
+      height: 400px;
+    }
+
+    .maroon-board {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #7a1d1d 0%, #4a0f0f 100%);
+      border: 12px solid #3d0a0a;
+      border-radius: 18px;
+      box-shadow: 
+        inset 0 0 40px rgba(0,0,0,0.8),
+        0 15px 35px rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #round-indicator {
+      position: absolute;
+      top: 15px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #fca5a5;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: rgba(0,0,0,0.4);
+      padding: 4px 16px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    #math-display {
+      font-size: clamp(4rem, 12vw, 8rem);
+      font-weight: 900;
+      text-align: center;
+      color: #ffffff;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+      transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+      line-height: 1;
+    }
+
+    /* =========================================
+       6. KEYPAD & TAMPILAN SUBMIT (ADAPTOX STYLE)
+       ========================================= */
+    #submit-screen {
+      display: none;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .adaptox-layout {
+      display: flex;
+      flex-direction: row;
+      gap: 2rem;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem;
+      max-width: 850px;
+      width: 92%;
+    }
+
+    @media (max-width: 720px) {
+      .adaptox-layout {
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 1.5rem;
+      }
+    }
+
+    /* Kiri: Capsul Jawaban */
+    .answers-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      flex: 1;
+      width: 100%;
+    }
+
+    .answer-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .answer-label {
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #94a3b8;
+      text-transform: uppercase;
+    }
+
+    .capsule-input {
+      width: 100%;
+      max-width: 260px;
+      height: 60px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+      box-shadow: 
+        inset 0 3px 6px rgba(255,255,255,0.4),
+        inset 0 -4px 8px rgba(0,0,0,0.6),
+        0 8px 15px rgba(0,0,0,0.5);
+      border: 3px solid #cbd5e1;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+    }
+
+    .capsule-input.active {
+      transform: scale(1.04);
+      outline: 3px solid #52bdff;
+      box-shadow: 0 0 20px #00a2ff;
+    }
+
+    .capsule-red {
+      background: linear-gradient(180deg, #ff4d4d 0%, #b30000 100%);
+      border-color: #fca5a5;
+    }
+
+    .capsule-blue {
+      background: linear-gradient(180deg, #00a2ff 0%, #0056b3 100%);
+      border-color: #93c5fd;
+    }
+
+    /* Kanan: Keypad Perak 3x4 */
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      width: 260px;
+    }
+
+    .key-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #e2e8f0 0%, #94a3b8 50%, #475569 100%);
+      border: 3px solid #f8fafc;
+      box-shadow: 
+        0 6px 0 #1e293b,
+        0 10px 15px rgba(0,0,0,0.6),
+        inset 0 2px 4px rgba(255,255,255,0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #1e293b;
+      cursor: pointer;
+      transition: all 0.1s ease;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .key-btn:active {
+      transform: translateY(4px);
+      box-shadow: 
+        0 2px 0 #1e293b,
+        0 4px 8px rgba(0,0,0,0.6),
+        inset 0 1px 2px rgba(255,255,255,0.8);
+    }
+
+    .key-btn.btn-action {
+      font-size: 1.5rem;
+      background: linear-gradient(180deg, #cbd5e1 0%, #64748b 100%);
+    }
+
+    /* =========================================
+       7. RESULT SCREEN
+       ========================================= */
+    #result-screen {
+      display: none;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .result-card {
+      padding: 2rem;
+      width: 90%;
+      max-width: 450px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      align-items: center;
+    }
+
+    .score-title { font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; color: #94a3b8; font-weight: 700; }
+    .score-value { font-size: 4rem; font-weight: 900; color: #52bdff; text-shadow: 0 0 20px rgba(0, 162, 255, 0.6); line-height: 1; }
+
+    .details-grid {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      background: rgba(0,0,0,0.4);
+      padding: 1.2rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .detail-row { display: flex; justify-content: space-between; align-items: center; font-size: 1rem; font-weight: 700; }
+
+    .glow-btn {
+      background: linear-gradient(180deg, #00a2ff 0%, #0056b3 100%);
+      border: 2px solid #52bdff;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      padding: 0.9rem;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 6px 15px rgba(0, 162, 255, 0.4);
+      transition: all 0.2s;
+    }
+    .glow-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 162, 255, 0.6); }
+    .glow-btn.play-again { background: linear-gradient(180deg, #22c55e 0%, #15803d 100%); border-color: #86efac; box-shadow: 0 6px 15px rgba(34, 197, 94, 0.4); }
+
+    .leaderboard-table { width: 100%; margin-top: 0.5rem; border-collapse: collapse; font-size: 0.88rem; }
+    .leaderboard-table th, .leaderboard-table td { padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; }
+    .leaderboard-table th { color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="ui-layer">
+      
+      <!-- LOGO HEDER PERMANEN -->
+      <div class="adaptox-logo">
+        <div class="adaptox-badge">
+          ADAPTO<span class="adaptox-x">X</span>
+        </div>
+      </div>
+
+      <!-- LOBBY -->
+      <div id="lobby-screen">
+        <div style="text-align: center; color: #94a3b8; font-weight: 700; font-size: 0.95rem;">
+          Pemain: <span id="player-name-display" style="color: #52bdff;">Anonim</span>
+        </div>
+        <div class="mode-list">
+          <div class="mode-card card-easy" onclick="selectMode('EASY')">
+            <div class="mode-icon">⚡</div>
+            <div class="mode-info">
+              <div class="mode-name">EASY</div>
+              <div class="mode-desc">10 Soal • Moded Dasar</div>
+            </div>
+          </div>
+          <div class="mode-card card-normal" onclick="selectMode('NORMAL')">
+            <div class="mode-icon">🔥</div>
+            <div class="mode-info">
+              <div class="mode-name">NORMAL</div>
+              <div class="mode-desc">15 Soal • Tambah Modulo (%)</div>
+            </div>
+          </div>
+          <div class="mode-card card-hard" onclick="selectMode('HARD')">
+            <div class="mode-icon">☠️</div>
+            <div class="mode-info">
+              <div class="mode-name">HARD</div>
+              <div class="mode-desc">20 Soal • Tambah Kuadrat & Akar</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE (SOAL MAROON) -->
+      <div id="stage-container">
+        <div class="maroon-board">
+          <div id="round-indicator">RONDE 1 / 1</div>
+          <div id="math-display">3</div>
+        </div>
+      </div>
+
+      <!-- SUBMIT JAWABAN (KEYPAD & CAPSULES) -->
+      <div id="submit-screen">
+        <div class="stone-frame adaptox-layout">
+          
+          <!-- Jawaban Merah & Biru -->
+          <div class="answers-container">
+            <div class="answer-box" onclick="setActiveInput('RED')">
+              <div class="answer-label">JAWABAN 1</div>
+              <div id="red-capsule" class="capsule-input capsule-red active">0</div>
+            </div>
+            <div class="answer-box" onclick="setActiveInput('BLUE')">
+              <div class="answer-label">JAWABAN 2</div>
+              <div id="blue-capsule" class="capsule-input capsule-blue">0</div>
+            </div>
+          </div>
+
+          <!-- Keypad Perak 3x4 -->
+          <div class="keypad-grid">
+            <div class="key-btn" onclick="pressKey('1')">1</div>
+            <div class="key-btn" onclick="pressKey('2')">2</div>
+            <div class="key-btn" onclick="pressKey('3')">3</div>
+            <div class="key-btn" onclick="pressKey('4')">4</div>
+            <div class="key-btn" onclick="pressKey('5')">5</div>
+            <div class="key-btn" onclick="pressKey('6')">6</div>
+            <div class="key-btn" onclick="pressKey('7')">7</div>
+            <div class="key-btn" onclick="pressKey('8')">8</div>
+            <div class="key-btn" onclick="pressKey('9')">9</div>
+            <div class="key-btn btn-action" onclick="pressKey('DEL')">⌫</div>
+            <div class="key-btn" onclick="pressKey('0')">0</div>
+            <div class="key-btn btn-action" onclick="pressKey('SUBMIT')" style="color: #0284c7;">➤</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- HASIL / RESULT -->
+      <div id="result-screen">
+        <div class="stone-frame result-card">
+          <div class="score-title">NILAI AKHIR</div>
+          <div class="score-value" id="final-score-val">0 / 10</div>
+          
+          <div class="details-grid" id="score-details"></div>
+
+          <div style="display: flex; gap: 10px; width: 100%;">
+            <button class="glow-btn play-again" onclick="playAgain()">MAIN LAGI</button>
+            <button class="glow-btn" style="background: linear-gradient(180deg, #475569 0%, #1e293b 100%); border-color: #94a3b8;" onclick="showLobby()">LOBI</button>
+          </div>
+
+          <div style="margin-top: 0.5rem; text-align: left; width: 100%;">
+            <h3 style="color: #64748b; font-size: 0.8rem; margin-bottom: 0.4rem; text-align: center; letter-spacing: 1px;">TOP 5 GLOBAL</h3>
+            <table class="leaderboard-table">
+              <thead><tr><th>Rank</th><th>Nama</th><th>Skor</th></tr></thead>
+              <tbody id="leaderboard-body">
+                <tr><td colspan="3" style="text-align: center; color: #64748b;">Memuat data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // === 1. GLOBAL STATE & COMMUNICATION ===
+    let currentPlayerName = 'Anonim';
+    let isEmbedded = (window.parent !== window);
+
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'SET_PLAYER_NAME') {
+        currentPlayerName = event.data.name || 'Anonim';
+        document.getElementById('player-name-display').textContent = currentPlayerName;
+      }
+    });
+    if (isEmbedded) window.parent.postMessage({ type: 'REQUEST_PLAYER_NAME' }, '*');
+
+    // === 2. AUDIO SYNTHESIS ===
+    class SoundController {
+      constructor() { this.ctx = null; }
+      init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+      playPop(freq = 440) {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.4, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+      }
+      playWin() {
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99].forEach((f, i) => {
+          const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+          osc.type = 'triangle'; osc.frequency.value = f;
+          gain.gain.setValueAtTime(0, now + i * 0.1);
+          gain.gain.linearRampToValueAtTime(0.2, now + i * 0.1 + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.4);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.1); osc.stop(now + i * 0.1 + 0.4);
+        });
+      }
+    }
+    const sound = new SoundController();
+
+    // === 3. CANVAS BACKGROUND ===
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+    function renderBg() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      requestAnimationFrame(renderBg);
+    }
+    renderBg();
+
+    // === 4. GAME CONFIGURATION ===
+    const MODE_CONFIG = {
+      EASY:   { opsCount: 10, maxAddSub: 10, maxMulDiv: 5,  delay: 2500, maxScore: 10 },
+      NORMAL: { opsCount: 15, maxAddSub: 25, maxMulDiv: 10, delay: 2000, maxScore: 15 },
+      HARD:   { opsCount: 20, maxAddSub: 50, maxMulDiv: 15, delay: 1500, maxScore: 20 }
+    };
+
+    let selectedMode = 'EASY';
+    let totalRounds = 1;
+    let currentRound = 1;
+    let sequence = [];
+    let currentIndex = 0;
+    let actualRedTotal = 0;
+    let actualBlueTotal = 0;
+
+    let activeInputTarget = 'RED'; // 'RED' atau 'BLUE'
+    let redInputValue = '';
+    let blueInputValue = '';
+
+    function selectMode(mode) { selectedMode = mode; startNewGame(); }
+    function playAgain() { startNewGame(); }
+
+    function startNewGame() {
+      document.getElementById('lobby-screen').style.display = 'none';
+      document.getElementById('result-screen').style.display = 'none';
+      document.getElementById('submit-screen').style.display = 'none';
+      
+      totalRounds = (selectedMode === 'HARD') ? 2 : 1;
+      currentRound = 1;
+
+      // Hasilkan soal yang ACAK setiap kali bermain baru
+      const roundData = buildBalancedRoundData();
+      applyRoundData(roundData);
+
+      document.getElementById('stage-container').style.display = 'flex';
+      startSequenceRound();
+    }
+
+    function showLobby() {
+      document.getElementById('result-screen').style.display = 'none';
+      document.getElementById('submit-screen').style.display = 'none';
+      document.getElementById('stage-container').style.display = 'none';
+      document.getElementById('lobby-screen').style.display = 'flex';
+    }
+
+    // === 5. GENERATOR MATEMATIKA ACAK ===
+    function isPerfectSquare(n) { return n > 0 && Math.sqrt(n) % 1 === 0; }
+
+    function generateMathItem(mode, prevType, currentValue) {
+      const config = MODE_CONFIG[mode];
+      let allowTypes = ['ADD', 'SUB', 'MUL'];
+      if (mode !== 'EASY' && currentValue > 0) allowTypes.push('MOD');
+      
+      const divCandidates = [2, 3, 4, 5, 6, 7].filter(d => currentValue > 0 && currentValue % d === 0);
+      if (divCandidates.length > 0) allowTypes.push('DIV');
+
+      if (mode === 'HARD') {
+        if (currentValue >= 2 && currentValue <= 15) allowTypes.push('SQR');
+        if (isPerfectSquare(currentValue) && currentValue >= 4) allowTypes.push('SQRT');
+      }
+
+      if (prevType === 'SQR' || prevType === 'SQRT') allowTypes = allowTypes.filter(t => t !== 'SQR' && t !== 'SQRT');
+      if (prevType === 'MUL' || prevType === 'DIV') allowTypes = allowTypes.filter(t => t !== 'MUL' && t !== 'DIV');
+      if (allowTypes.length === 0) allowTypes = ['ADD', 'SUB'];
+
+      const type = allowTypes[Math.floor(Math.random() * allowTypes.length)];
+
+      if (type === 'ADD') {
+        const val = Math.floor(Math.random() * config.maxAddSub) + 1;
+        return { type, display: `+${val}`, val };
+      }
+      if (type === 'SUB') {
+        const maxSub = Math.min(config.maxAddSub, Math.max(0, currentValue));
+        const val = maxSub > 0 ? Math.floor(Math.random() * maxSub) + 1 : 1;
+        if (currentValue - val < 0) {
+          const add = Math.floor(Math.random() * config.maxAddSub) + 1;
+          return { type: 'ADD', display: `+${add}`, val: add };
+        }
+        return { type, display: `-${val}`, val: -val };
+      }
+      if (type === 'MUL') {
+        const factor = Math.floor(Math.random() * (config.maxMulDiv - 1)) + 2;
+        return { type, display: `×${factor}`, val: factor, isMultiplier: true };
+      }
+      if (type === 'DIV') {
+        const divisor = divCandidates[Math.floor(Math.random() * divCandidates.length)];
+        return { type, display: `:${divisor}`, val: divisor, isDivider: true };
+      }
+      if (type === 'MOD') {
+        const divisor = Math.floor(Math.random() * 5) + 2;
+        return { type, display: `%${divisor}`, val: divisor, isModulo: true };
+      }
+      if (type === 'SQR') {
+        return { type, display: `(${currentValue}²)`, val: 2, isSquare: true };
+      }
+      return { type, display: `√${currentValue}`, val: 1, isSqrt: true };
+    }
+
+    function applyOp(current, item) {
+      if (item.isMultiplier) return current * item.val;
+      if (item.isDivider) return Math.round(current / item.val);
+      if (item.isModulo) return current % item.val;
+      if (item.isSquare) return Math.pow(current, 2);
+      if (item.isSqrt) return Math.round(Math.sqrt(Math.abs(current)));
+      return current + item.val;
+    }
+
+    function buildRoundData() {
+      const seq = [];
+      const config = MODE_CONFIG[selectedMode];
+      const opsCount = config.opsCount;
+
+      let redStartVal = Math.floor(Math.random() * 10) + 2;
+      let blueStartVal = Math.floor(Math.random() * 10) + 2;
+
+      let redState = redStartVal, blueState = blueStartVal;
+      let prevRedType = null, prevBlueType = null;
+
+      for (let i = 0; i < opsCount; i++) {
+        const isRed = (i % 2 === 0);
+        if (i === 0) { seq.push({ color: 'RED', display: `${redStartVal}` }); continue; }
+        if (i === 1) { seq.push({ color: 'BLUE', display: `${blueStartVal}` }); continue; }
+
+        if (isRed) {
+          const item = generateMathItem(selectedMode, prevRedType, redState);
+          redState = applyOp(redState, item);
+          prevRedType = item.type;
+          seq.push({ color: 'RED', display: item.display });
+        } else {
+          const item = generateMathItem(selectedMode, prevBlueType, blueState);
+          blueState = applyOp(blueState, item);
+          prevBlueType = item.type;
+          seq.push({ color: 'BLUE', display: item.display });
+        }
+      }
+      return { sequence: seq, redTotal: redState, blueTotal: blueState };
+    }
+
+    function buildBalancedRoundData() {
+      for (let attempt = 0; attempt < 30; attempt++) {
+        const data = buildRoundData();
+        if (Math.abs(data.redTotal) <= 3000 && Math.abs(data.blueTotal) <= 3000) return data;
+      }
+      return buildRoundData();
+    }
+
+    function applyRoundData(data) {
+      sequence = data.sequence;
+      actualRedTotal = data.redTotal;
+      actualBlueTotal = data.blueTotal;
+    }
+
+    // === 6. GAMEPLAY SEQUENCE ===
+    function startSequenceRound() {
+      sound.init();
+      document.getElementById('stage-container').style.display = 'flex';
+      const roundIndicator = document.getElementById('round-indicator');
+      if (totalRounds > 1) {
+        roundIndicator.style.display = 'block';
+        roundIndicator.textContent = `RONDE ${currentRound} / ${totalRounds}`;
+      } else {
+        roundIndicator.style.display = 'none';
+      }
+
+      currentIndex = 0;
+      const mathDisplay = document.getElementById('math-display');
+      let count = 3;
+      mathDisplay.textContent = count;
+      mathDisplay.style.color = '#ffffff';
+      sound.playPop(400);
+
+      const countInterval = setInterval(() => {
+        count--;
+        if (count > 0) {
+          mathDisplay.textContent = count;
+          sound.playPop(400);
+        } else if (count === 0) {
+          mathDisplay.textContent = 'SIAP!';
+          sound.playPop(600);
+        } else {
+          clearInterval(countInterval);
+          playNextMathStep();
+        }
+      }, 800);
+    }
+
+    function playNextMathStep() {
+      if (currentIndex >= sequence.length) {
+        if (currentRound < totalRounds) {
+          currentRound++;
+          startSequenceRound();
+        } else {
+          showSubmitScreen();
+        }
+        return;
+      }
+
+      const step = sequence[currentIndex];
+      const isRed = step.color === 'RED';
+      const mathDisplay = document.getElementById('math-display');
+
+      mathDisplay.style.opacity = '0';
+      mathDisplay.style.transform = 'scale(0.8)';
+
+      setTimeout(() => {
+        mathDisplay.textContent = step.display;
+        mathDisplay.style.color = isRed ? '#fca5a5' : '#93c5fd';
+        mathDisplay.style.opacity = '1';
+        mathDisplay.style.transform = 'scale(1)';
+        sound.playPop(isRed ? 520 : 680);
+      }, 150);
+
+      currentIndex++;
+      setTimeout(playNextMathStep, MODE_CONFIG[selectedMode].delay);
+    }
+
+    // === 7. KEYPAD & INPUT HANDLING ===
+    function showSubmitScreen() {
+      document.getElementById('stage-container').style.display = 'none';
+      document.getElementById('submit-screen').style.display = 'flex';
+      redInputValue = '';
+      blueInputValue = '';
+      updateCapsuleDisplays();
+      setActiveInput('RED');
+    }
+
+    function setActiveInput(target) {
+      activeInputTarget = target;
+      document.getElementById('red-capsule').classList.toggle('active', target === 'RED');
+      document.getElementById('blue-capsule').classList.toggle('active', target === 'BLUE');
+      sound.playPop(300);
+    }
+
+    function pressKey(key) {
+      sound.playPop(500);
+
+      if (key === 'SUBMIT') {
+        submitAnswers();
+        return;
+      }
+
+      let currentVal = (activeInputTarget === 'RED') ? redInputValue : blueInputValue;
+
+      if (key === 'DEL') {
+        currentVal = currentVal.slice(0, -1);
+      } else {
+        if (currentVal.length < 6) currentVal += key;
+      }
+
+      if (activeInputTarget === 'RED') redInputValue = currentVal;
+      else blueInputValue = currentVal;
+
+      updateCapsuleDisplays();
+    }
+
+    function updateCapsuleDisplays() {
+      document.getElementById('red-capsule').textContent = redInputValue || '0';
+      document.getElementById('blue-capsule').textContent = blueInputValue || '0';
+    }
+
+    // === 8. SUBMIT & EVALUATION ===
+    function submitAnswers() {
+      const userRed = redInputValue ? parseInt(redInputValue) : null;
+      const userBlue = blueInputValue ? parseInt(blueInputValue) : null;
+
+      const config = MODE_CONFIG[selectedMode];
+      const totalMax = config.maxScore;
+
+      let correctCount = 0;
+      let detailHtml = '';
+
+      if (userRed !== null && userRed === actualRedTotal) {
+        correctCount++;
+        detailHtml += `<div class="detail-row" style="color: #4ade80;"><span>Jawaban 1 (Merah):</span><span>BENAR</span></div>`;
+      } else {
+        detailHtml += `<div class="detail-row" style="color: #f87171;"><span>Jawaban 1 (Asli: ${actualRedTotal}):</span><span>SALAH</span></div>`;
+      }
+
+      if (userBlue !== null && userBlue === actualBlueTotal) {
+        correctCount++;
+        detailHtml += `<div class="detail-row" style="color: #4ade80;"><span>Jawaban 2 (Biru):</span><span>BENAR</span></div>`;
+      } else {
+        detailHtml += `<div class="detail-row" style="color: #f87171;"><span>Jawaban 2 (Asli: ${actualBlueTotal}):</span><span>SALAH</span></div>`;
+      }
+
+      const finalScore = Math.round((correctCount / 2) * totalMax);
+
+      document.getElementById('final-score-val').textContent = `${finalScore} / ${totalMax}`;
+      document.getElementById('score-details').innerHTML = detailHtml;
+
+      document.getElementById('submit-screen').style.display = 'none';
+      document.getElementById('result-screen').style.display = 'flex';
+      sound.playWin();
+
+      if (isEmbedded) {
+        window.parent.postMessage({ type: 'NUMBER_DISCO_RESULT', playerName: currentPlayerName, score: finalScore, mode: selectedMode }, '*');
+      }
+      loadLeaderboard(selectedMode);
+    }
+
+    async function loadLeaderboard(mode) {
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #64748b;">Memuat data...</td></tr>';
+      if (isEmbedded) window.parent.postMessage({ type: 'REQUEST_LEADERBOARD', mode: mode }, '*');
+      else tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #64748b;">Buka di aplikasi utama.</td></tr>';
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'LEADERBOARD_DATA') {
+        const tbody = document.getElementById('leaderboard-body');
+        const data = event.data.data;
+        if (data && data.length > 0) {
+          tbody.innerHTML = data.map((item, index) => `<tr><td>#${index + 1}</td><td>${item.player_name}</td><td>${item.score}</td></tr>`).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #64748b;">Belum ada skor.</td></tr>';
+        }
+      }
+    });
+  </script>
+</body>
+</html>

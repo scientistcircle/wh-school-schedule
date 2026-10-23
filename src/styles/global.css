@@ -5209,3 +5209,142 @@ body:has(.ig-toggle-btn) .floating-help {
   70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
   100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
+/* ============================================================
+   PERBAIKAN TABEL JADWAL (AGAR LURUS & PROPORSIONAL)
+   ============================================================ */
+.data-table {
+  width: 100%;
+  table-layout: fixed; /* Memaksa lebar kolom konsisten */
+}
+
+/* Atur lebar tiap kolom (total 100%) */
+.data-table th:nth-child(1), .data-table td:nth-child(1) { width: 15%; } /* Kelas */
+.data-table th:nth-child(2), .data-table td:nth-child(2) { width: 25%; } /* Guru */
+.data-table th:nth-child(3), .data-table td:nth-child(3) { width: 25%; } /* Mapel */
+.data-table th:nth-child(4), .data-table td:nth-child(4) { width: 15%; } /* Ruang */
+
+/* Hapus atau abaikan aturan nth-child(5) karena kolom Catatan sudah tidak ada */
+/* .data-table th:nth-child(5), .data-table td:nth-child(5) { width: 20%; } */
+
+/* Agar teks yang panjang turun ke bawah (wrap) dan tidak merusak tabel */
+.data-table td {
+  white-space: normal !important; 
+  word-wrap: break-word;
+  vertical-align: middle;
+}
+
+/* Khusus HP: beri scroll horizontal agar tabel tidak gepeng */
+.table-wrap {
+  overflow-x: auto;
+}
+.data-table {
+  min-width: 700px; /* Lebar minimum agar teks tidak bertumpuk di HP */
+}
+/* ============================================================
+   STYLING KELAS GABUNGAN (SIMPLE)
+   ============================================================ */
+
+/* Warna latar belakang baris kelas gabungan */
+.data-table tr.row-combined {
+  background-color: rgba(59, 130, 246, 0.06) !important; 
+  border-left: 4px solid var(--primary);
+}
+
+.data-table tr.row-combined:hover {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+}
+
+/* Mode Gelap */
+[data-theme='dark'] .data-table tr.row-combined {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+}
+[data-theme='dark'] .data-table tr.row-combined:hover {
+  background-color: rgba(59, 130, 246, 0.22) !important;
+}
+/* ============================================================
+   STYLING JUDUL KBM DI TENGAH & HIGHLIGHT
+   ============================================================ */
+
+
+/* Jika sesi sedang berlangsung, beri animasi berkedip */
+.home-session-card.is-ongoing .kbm-highlight {
+  background-color: var(--success); /* Warna hijau untuk yang sedang berjalan */
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+  animation: pulseHighlight 2s infinite;
+}
+
+@keyframes pulseHighlight {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+/* ============================================================
+   STYLING HEADER KBM (FULL HIGHLIGHT & ANIMASI)
+   ============================================================ */
+
+/* Gradasi Biru Penuh untuk Header KBM */
+.card__header.is-highlighted {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
+  border-bottom: none !important;
+  color: #fff !important;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Container Teks KBM di Tengah */
+.kbm-title-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center; 
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* Kotak Kecil Transparan untuk Teks KBM 1, KBM 2, dst */
+.kbm-highlight {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* ============================================================
+   ANIMASI SAAT KBM SEDANG BERLANGSUNG (Hijau Berdenyut)
+   ============================================================ */
+
+@keyframes pulseGlowGreen {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 15px 5px rgba(16, 185, 129, 0.4);
+    filter: brightness(1.15);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    filter: brightness(1);
+  }
+}
+
+/* Timpa warna biru dengan Hijau + Animasi jika sedang berlangsung */
+.card__header.is-highlighted.is-ongoing-header {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+  animation: pulseGlowGreen 2s infinite !important;
+  border-left: 4px solid #fff !important;
+}
+
+/* Penyesuaian Tombol Detail agar menyatu dengan Header */
+.card__header.is-highlighted .btn--ghost {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.card__header.is-highlighted .btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

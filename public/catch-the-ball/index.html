@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catch the Ball - Game HTML5</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+ body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #fff;
+  user-select: none;
+}
+  h1 { margin-bottom: 10px; font-size: 24px; letter-spacing: 1px; }
+  #info {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  #score { color: #4ade80; }
+  #lives { color: #f87171; }
+canvas {
+  background: #0f3460;
+  border: 3px solid #4ade80;
+  border-radius: 10px;
+  box-shadow: 0 0 30px rgba(74, 222, 128, 0.3);
+  touch-action: none;
+  max-height: calc(100vh - 130px);
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  flex-shrink: 1;
+  min-height: 0;
+}
+  #hint {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+  #overlay {
+    position: absolute;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    background: rgba(0,0,0,0.92);
+    padding: 20px 40px;
+    border-radius: 15px;
+    border: 2px solid #4ade80;
+    max-height: 90vh;
+    overflow-y: auto;
+    min-width: 320px;
+  }
+  #overlay h2 { color: #4ade80; }
+  #overlayText { color: #e2e8f0; font-size: 18px; }
+  #overlay button {
+    padding: 10px 25px;
+    font-size: 16px;
+    font-weight: bold;
+    background: #4ade80;
+    color: #0f3460;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.15s;
+    margin-top: 10px;
+  }
+  #overlay button:hover { transform: scale(1.05); }
+  
+  #mini-leaderboard {
+    width: 100%;
+    margin-top: 15px;
+    border-top: 1px solid #334155;
+    padding-top: 10px;
+    display: none;
+  }
+  #mini-leaderboard h3 {
+    color: #fbbf24;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* Menyembunyikan scrollbar game */
+  background: #0b1220; /* Warna background game */
+}
+
+#game-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+canvas {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* Memastikan canvas pas dan tidak terpotong */
+}
+  .lb-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+  }
+  .lb-row:nth-child(1) { background: rgba(251, 191, 36, 0.2); color: #fbbf24; font-weight: bold; }
+  .lb-row:nth-child(2) { background: rgba(226, 232, 240, 0.1); color: #e2e8f0; }
+  .lb-row:nth-child(3) { background: rgba(251, 146, 60, 0.1); color: #fb923c; }
+  .lb-row:nth-child(4), .lb-row:nth-child(5) { background: rgba(255,255,255,0.05); color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<h1>🎮 CATCH THE BALL</h1>
+<div id="info">
+  <span>Skor: <span id="score">0</span></span>
+  <span>Nyawa: <span id="lives">3</span></span>
+</div>
+
+<canvas id="game" width="400" height="550"></canvas>
+<p id="hint">Gunakan ← → atau sentuh/drag untuk menggerakkan keranjang</p>
+
+<div id="overlay">
+  <h2 id="overlayTitle">Game Over!</h2>
+  <p id="overlayText">Skor akhir: 0</p>
+  
+  <div id="mini-leaderboard">
+    <h3>🏆 Top 5 Global</h3>
+    <div id="lb-content">Memuat data...</div>
+  </div>
+
+  <button id="restartBtn">Main Lagi</button>
+</div>
+
+<script>
+(() => {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const scoreEl = document.getElementById('score');
+  const livesEl = document.getElementById('lives');
+  const overlay = document.getElementById('overlay');
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlayText = document.getElementById('overlayText');
+  const restartBtn = document.getElementById('restartBtn');
+  
+  const miniLeaderboard = document.getElementById('mini-leaderboard');
+  const lbContent = document.getElementById('lb-content');
+
+  let score, lives, running, gameSpeed;
+  let balls = [];
+  let particles = [];
+  let keys = { left: false, right: false };
+
+  const basket = { w: 80, h: 18, x: W / 2 - 40, y: H - 50, speed: 7 };
+  let spawnTimer = 0;
+  let spawnInterval = 60;
+  let lastTime = 0;
+
+  function reset() {
+    score = 0;
+    lives = 3;
+    gameSpeed = 1;
+    balls = [];
+    particles = [];
+    spawnTimer = 0;
+    spawnInterval = 60;
+    basket.x = W / 2 - basket.w / 2;
+    running = true;
+    overlay.style.display = 'none';
+    miniLeaderboard.style.display = 'none';
+    lbContent.innerHTML = '';
+    updateHUD();
+  }
+
+  function updateHUD() {
+    scoreEl.textContent = score;
+    livesEl.textContent = lives;
+  }
+
+  function spawnBall() {
+    const radius = 10 + Math.random() * 10;
+    balls.push({
+      x: radius + Math.random() * (W - radius * 2),
+      y: -radius,
+      r: radius,
+      vy: 2 + Math.random() * 2 + gameSpeed * 0.5,
+      color: `hsl(${Math.random() * 360}, 80%, 60%)`
+    });
+  }
+
+  function createParticles(x, y, color) {
+    for (let i = 0; i < 12; i++) {
+      const angle = (Math.PI * 2 * i) / 12;
+      const speed = 2 + Math.random() * 3;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 30,
+        color
+      });
+    }
+  }
+
+  function gameOver() {
+    running = false;
+    overlayTitle.textContent = 'Game Over!';
+    overlayText.textContent = `Skor akhir: ${score}`;
+    overlay.style.display = 'flex';
+
+    // Sembunyikan leaderboard di dalam game
+    miniLeaderboard.style.display = 'none'; 
+
+    // Kirim skor ke React (agar muncul di panel samping)
+    if (window.parent !== window) {
+      window.parent.postMessage({
+        type: 'ARCADE_RESULT',
+        game: 'catch-the-ball',
+        score: score
+      }, '*');
+    }
+  }
+  // Terima data leaderboard dari React
+  window.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'LEADERBOARD_DATA') {
+      const data = event.data.data;
+      if (data && data.length > 0) {
+        lbContent.innerHTML = data.map((item, index) => `
+          <div class="lb-row">
+            <span>#${index + 1} ${item.player_name}</span>
+            <span>${item.score}</span>
+          </div>
+        `).join('');
+      } else {
+        lbContent.innerHTML = '<div style="text-align:center;color:#94a3b8;">Belum ada skor.</div>';
+      }
+    }
+  });
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') keys.left = true;
+    if (e.key === 'ArrowRight') keys.right = true;
+  });
+  window.addEventListener('keyup', e => {
+    if (e.key === 'ArrowLeft') keys.left = false;
+    if (e.key === 'ArrowRight') keys.right = false;
+  });
+
+  let dragging = false;
+  function moveBasketTo(clientX) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const x = (clientX - rect.left) * scaleX;
+    basket.x = Math.max(0, Math.min(W - basket.w, x - basket.w / 2));
+  }
+  canvas.addEventListener('pointerdown', e => {
+    dragging = true;
+    canvas.setPointerCapture(e.pointerId);
+    moveBasketTo(e.clientX);
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (dragging) moveBasketTo(e.clientX);
+  });
+  canvas.addEventListener('pointerup', () => dragging = false);
+  canvas.addEventListener('pointercancel', () => dragging = false);
+
+  restartBtn.addEventListener('click', reset);
+
+  function update(dt) {
+    if (keys.left) basket.x -= basket.speed;
+    if (keys.right) basket.x += basket.speed;
+    basket.x = Math.max(0, Math.min(W - basket.w, basket.x));
+
+    spawnTimer++;
+    if (spawnTimer >= spawnInterval) {
+      spawnTimer = 0;
+      spawnBall();
+      spawnInterval = Math.max(20, spawnInterval - 0.5);
+    }
+
+    for (let i = balls.length - 1; i >= 0; i--) {
+      const b = balls[i];
+      b.y += b.vy;
+
+      const caught =
+        b.y + b.r >= basket.y &&
+        b.y + b.r <= basket.y + basket.h + 15 &&
+        b.x >= basket.x - 5 &&
+        b.x <= basket.x + basket.w + 5;
+
+      if (caught) {
+        score++;
+        createParticles(b.x, b.y, b.color);
+        balls.splice(i, 1);
+        updateHUD();
+        if (score % 10 === 0) {
+          gameSpeed += 0.5;
+          if (spawnInterval > 20) spawnInterval -= 3;
+        }
+        continue;
+      }
+
+      if (b.y - b.r > H) {
+        balls.splice(i, 1);
+        lives--;
+        updateHUD();
+        if (lives <= 0) gameOver();
+      }
+    }
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.15;
+      p.life--;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+  }
+
+  function drawStars() {
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    for (let i = 0; i < 30; i++) {
+      const x = (i * 137) % W;
+      const y = (i * 211) % H;
+      const r = (i % 3) + 1;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawBasket() {
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(basket.x + basket.w/2, basket.y + basket.h + 5,
+                basket.w/2, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    const grad = ctx.createLinearGradient(0, basket.y, 0, basket.y + basket.h);
+    grad.addColorStop(0, '#fbbf24');
+    grad.addColorStop(1, '#d97706');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(basket.x, basket.y, basket.w, basket.h, 6);
+    ctx.fill();
+
+    ctx.fillStyle = '#fde68a';
+    ctx.beginPath();
+    ctx.roundRect(basket.x, basket.y, basket.w, 5, 3);
+    ctx.fill();
+  }
+
+  function render() {
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#0f3460');
+    bg.addColorStop(1, '#1a1a2e');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    drawStars();
+
+    for (const b of balls) {
+      const grad = ctx.createRadialGradient(
+        b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.1,
+        b.x, b.y, b.r
+      );
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.3, b.color);
+      grad.addColorStop(1, b.color);
+
+      ctx.shadowColor = b.color;
+      ctx.shadowBlur = 15;
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    for (const p of particles) {
+      ctx.globalAlpha = p.life / 30;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    drawBasket();
+  }
+
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+      if (w < 2 * r) r = w / 2;
+      if (h < 2 * r) r = h / 2;
+      this.beginPath();
+      this.moveTo(x + r, y);
+      this.arcTo(x + w, y, x + w, y + h, r);
+      this.arcTo(x + w, y + h, x, y + h, r);
+      this.arcTo(x, y + h, x, y, r);
+      this.arcTo(x, y, x + w, y, r);
+      this.closePath();
+    };
+  }
+
+  function loop(timestamp) {
+    const dt = timestamp - lastTime;
+    lastTime = timestamp;
+    if (running) update(dt);
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  reset();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

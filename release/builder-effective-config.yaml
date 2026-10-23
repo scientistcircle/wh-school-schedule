@@ -1,0 +1,19 @@
+directories:
+  output: release
+  buildResources: build
+appId: com.wh.schedule
+productName: WH Schedule
+win:
+  target: nsis
+  icon: public/logo.png
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+files:
+  - filter:
+      - dist/**/*
+      - electron/**/*
+      - public/**/*
+electronVersion: 44.9.1

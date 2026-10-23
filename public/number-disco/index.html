@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>NUMBER DISCO - FUN EDITION</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Fredoka One', cursive; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background-color: #1a1a2e; color: #fff; }
+    #game-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow: hidden; }
+    canvas#bg-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+    .ui-layer { position: relative; z-index: 10; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; }
+    .interactive { pointer-events: auto; }
+    
+    /* Lobby */
+    .title-header { font-size: 3.5rem; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; text-align: center; color: #fff; text-shadow: 0 4px 0 #ffb3c1, 0 8px 0 #ffd6a5, 0 0 30px rgba(255, 214, 165, 0.8); margin-bottom: 1rem; animation: bounceTitle 2s infinite ease-in-out; }
+    @keyframes bounceTitle { 0%, 100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-10px) rotate(1deg); } }
+    
+    #lobby-screen { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; width: 90%; max-width: 420px; }
+    .mode-list { display: flex; flex-direction: column; gap: 1rem; width: 100%; }
+    .mode-card { background: #fff; border: none; border-radius: 20px; padding: 1.2rem 1.5rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; transition: all 0.2s; box-shadow: 0 6px 0 rgba(0,0,0,0.2); color: #333; }
+    .mode-card:hover { transform: translateY(-3px); box-shadow: 0 9px 0 rgba(0,0,0,0.2); }
+    .mode-card:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
+    .mode-icon { font-size: 2rem; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
+    
+    .card-easy .mode-icon { background: #d1fae5; color: #10b981; }
+    .card-normal .mode-icon { background: #e0e7ff; color: #6366f1; }
+    .card-hard .mode-icon { background: #fee2e2; color: #ef4444; }
+    
+    .mode-name { font-size: 1.5rem; }
+    .mode-desc { font-size: 0.9rem; color: #666; font-family: sans-serif; font-weight: bold; }
+
+    /* Stage */
+    #stage-container { display: none; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; }
+    #round-indicator { position: absolute; top: 10%; font-size: 1.5rem; color: #fff; background: #6366f1; padding: 0.5rem 1.5rem; border-radius: 30px; border-bottom: 4px solid #4338ca; }
+    #math-display { font-size: 14vw; color: #fff; text-shadow: 0 6px 0 #333, 0 0 40px currentColor; transition: transform 0.15s ease-out, opacity 0.15s ease-out; }
+    .pop-anim { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    @keyframes popIn { 0% { transform: scale(0.3); opacity: 0; } 70% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); } }
+
+    /* Screens */
+    #submit-screen, #result-screen { display: none; width: 100%; height: 100%; flex-direction: column; justify-content: center; align-items: center; background: rgba(26, 26, 46, 0.95); }
+    .glass-card, .result-card { background: #fff; color: #333; border-radius: 30px; padding: 2rem; width: 90%; max-width: 440px; display: flex; flex-direction: column; gap: 1rem; align-items: center; box-shadow: 0 10px 0 rgba(0,0,0,0.3); }
+    .input-group { width: 100%; display: flex; flex-direction: column; gap: 0.5rem; }
+    .input-label { font-size: 1.1rem; display: flex; align-items: center; gap: 8px; font-family: sans-serif; font-weight: bold; color: #555; }
+    .label-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .red-dot { background: #ff6b6b; } .blue-dot { background: #4ecdc4; }
+    .num-input { width: 100%; background: #f3f4f6; border: 3px solid #e5e7eb; border-radius: 16px; padding: 1rem; font-size: 1.8rem; color: #333; text-align: center; outline: none; font-family: 'Fredoka One', cursive; }
+    .num-input:focus { border-color: #6366f1; }
+    
+    .score-title { font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; color: #888; font-family: sans-serif; font-weight: bold; }
+    .score-value { font-size: 4rem; color: #6366f1; text-shadow: 0 4px 0 #c7d2fe; }
+    .details-grid { width: 100%; display: flex; flex-direction: column; gap: 0.6rem; background: #f9fafb; padding: 1.2rem; border-radius: 20px; border: 2px dashed #e5e7eb; }
+    .detail-row { display: flex; justify-content: space-between; font-size: 1rem; font-family: sans-serif; font-weight: bold; }
+    .divider { height: 2px; background: #e5e7eb; }
+    
+    .glow-btn { background: #4ade80; border: none; color: #14532d; font-size: 1.3rem; padding: 1rem 2rem; border-radius: 50px; cursor: pointer; text-transform: uppercase; width: 100%; border-bottom: 6px solid #16a34a; transition: all 0.1s; }
+    .glow-btn:active { transform: translateY(4px); border-bottom-width: 2px; }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="bg-canvas"></canvas>
+    <div class="ui-layer">
+      <!-- LOBBY -->
+      <div id="lobby-screen" class="interactive">
+        <div class="title-header">NUMBER DISCO</div>
+        <div class="mode-list">
+          <div class="mode-card card-easy" onclick="selectMode('EASY')"><div class="mode-icon">⚡</div><div><div class="mode-name">EASY</div><div class="mode-desc">7 Soal • Max 45 Poin</div></div></div>
+          <div class="mode-card card-normal" onclick="selectMode('NORMAL')"><div class="mode-icon">🔥</div><div><div class="mode-name">NORMAL</div><div class="mode-desc">14 Soal • Max 50 Poin</div></div></div>
+          <div class="mode-card card-hard" onclick="selectMode('HARD')"><div class="mode-icon">☠️</div><div><div class="mode-name">HARD</div><div class="mode-desc">20 Soal • Max 120 Poin</div></div></div>
+        </div>
+      </div>
+
+      <!-- STAGE -->
+      <div id="stage-container">
+        <div id="round-indicator" style="display: none;">RONDE 1 / 2</div>
+        <div id="math-display">3</div>
+      </div>
+
+      <!-- SUBMIT -->
+      <div id="submit-screen" class="interactive">
+        <div class="glass-card">
+          <div class="input-group"><label class="input-label" style="color:#ff6b6b;"><span class="label-dot red-dot"></span> Total Merah</label><input type="number" id="red-input" class="num-input" placeholder="0" /></div>
+          <div class="input-group"><label class="input-label" style="color:#4ecdc4;"><span class="label-dot blue-dot"></span> Total Biru</label><input type="number" id="blue-input" class="num-input" placeholder="0" /></div>
+          <button class="glow-btn" id="submit-btn">SUBMIT JAWABAN</button>
+        </div>
+      </div>
+
+      <!-- RESULT -->
+      <div id="result-screen" class="interactive">
+        <div class="result-card">
+          <div class="score-title">NILAI AKHIR</div>
+          <div class="score-value" id="final-score-val">0</div>
+          <div class="details-grid">
+            <div class="detail-row" style="color:#ff6b6b;"><span>Hasil Merah:</span><span id="res-red-actual">0</span></div>
+            <div class="detail-row" style="color:#ff6b6b;"><span>Selisih Merah:</span><span id="res-red-diff">0</span></div>
+            <div class="divider"></div>
+            <div class="detail-row" style="color:#4ecdc4;"><span>Hasil Biru:</span><span id="res-blue-actual">0</span></div>
+            <div class="detail-row" style="color:#4ecdc4;"><span>Selisih Biru:</span><span id="res-blue-diff">0</span></div>
+          </div>
+          <div id="bonus-container" style="display:none; color:#f59e0b; font-size:1.2rem;"></div>
+          <div id="mini-leaderboard" style="display:none; width:100%;">
+             <h3 style="color:#f59e0b; font-size:1rem; text-align:center; margin-bottom:5px;">🏆 TOP 5</h3>
+             <div id="lb-content" style="font-family:sans-serif; font-weight:bold; color:#555;"></div>
+          </div>
+          <button class="glow-btn" onclick="showLobby()">MAIN LAGI</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // === VARIABEL ===
+    let selectedMode = 'EASY', maxScorePerColor = 45, totalRounds = 1, currentRound = 1;
+    let sequence = [], currentIndex = 0, actualRedTotal = 0, actualBlueTotal = 0;
+    let redMaxRange = 1, blueMaxRange = 1, cachedRoundData = null;
+    const canvas = document.getElementById('bg-canvas'), ctx = canvas.getContext('2d');
+    const lobby = document.getElementById('lobby-screen'), stage = document.getElementById('stage-container');
+    const submitScreen = document.getElementById('submit-screen'), resultScreen = document.getElementById('result-screen');
+    const mathDisplay = document.getElementById('math-display'), roundIndicator = document.getElementById('round-indicator');
+    const redInput = document.getElementById('red-input'), blueInput = document.getElementById('blue-input');
+
+    // === SOUND SYSTEM (TETOT) ===
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      
+      if (type === 'correct') {
+        osc.type = 'sine'; osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+      } else if (type === 'wrong') {
+        // Suara Tetot Buzzer
+        osc.type = 'square'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(100, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+      }
+    }
+
+    // === ANIMASI BACKGROUND (BUBBLES) ===
+    let bubbles = [];
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+    class Bubble {
+      constructor() {
+        this.reset();
+        this.y = Math.random() * canvas.height;
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = canvas.height + 50;
+        this.r = Math.random() * 30 + 10;
+        this.speed = Math.random() * 1 + 0.5;
+        this.color = ['#ff6b6b', '#4ecdc4', '#feca57', '#a29bfe'][Math.floor(Math.random() * 4)];
+        this.alpha = Math.random() * 0.3 + 0.1;
+      }
+      update() {
+        this.y -= this.speed;
+        if (this.y + this.r < 0) this.reset();
+      }
+      draw(c) {
+        c.globalAlpha = this.alpha;
+        c.fillStyle = this.color;
+        c.beginPath(); c.arc(this.x, this.y, this.r, 0, Math.PI * 2); c.fill();
+        c.globalAlpha = 1;
+      }
+    }
+    for (let i = 0; i < 20; i++) bubbles.push(new Bubble());
+
+    function render() {
+      ctx.fillStyle = '#1a1a2e'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (const b of bubbles) { b.update(); b.draw(ctx); }
+      requestAnimationFrame(render);
+    }
+    render();
+
+    // === LOGIKA MATEMATIKA ===
+    function generateMathItem(currentValue) {
+      let ops = ['ADD', 'SUB'];
+      if (currentValue < 20) ops.push('MUL');
+      if (currentValue > 0 && currentValue % 2 === 0) ops.push('DIV');
+      const type = ops[Math.floor(Math.random() * ops.length)];
+      if (type === 'ADD') { const v = Math.floor(Math.random() * 10) + 1; return { display: `+${v}`, val: v }; }
+      if (type === 'SUB') { const v = Math.floor(Math.random() * Math.min(currentValue, 10)) + 1; return { display: `-${v}`, val: -v }; }
+      if (type === 'MUL') { const v = Math.floor(Math.random() * 3) + 2; return { display: `×${v}`, val: v, isMul: true }; }
+      if (type === 'DIV') { const v = [2,3,4].find(d => currentValue % d === 0) || 2; return { display: `:${v}`, val: v, isDiv: true }; }
+      return { display: '+1', val: 1 };
+    }
+    function applyOp(current, item) {
+      if (item.isMul) return current * item.val;
+      if (item.isDiv) return Math.round(current / item.val);
+      return current + item.val;
+    }
+    function buildRoundData() {
+      const seq = []; let opsCount = selectedMode === 'HARD' ? 20 : (selectedMode === 'NORMAL' ? 14 : 7);
+      let red = Math.floor(Math.random() * 10) + 5, blue = Math.floor(Math.random() * 10) + 5;
+      let redMin = red, redMax = red, blueMin = blue, blueMax = blue;
+      for (let i = 0; i < opsCount; i++) {
+        if (i === 0) { seq.push({ color: 'RED', display: `${red}` }); continue; }
+        if (i === 1) { seq.push({ color: 'BLUE', display: `${blue}` }); continue; }
+        if (i % 2 === 0) {
+          const item = generateMathItem(red);
+          red = applyOp(red, item); if (red < 0) red = 1;
+          redMin = Math.min(redMin, red); redMax = Math.max(redMax, red);
+          seq.push({ color: 'RED', display: item.display });
+        } else {
+          const item = generateMathItem(blue);
+          blue = applyOp(blue, item); if (blue < 0) blue = 1;
+          blueMin = Math.min(blueMin, blue); blueMax = Math.max(blueMax, blue);
+          seq.push({ color: 'BLUE', display: item.display });
+        }
+      }
+      return { sequence: seq, redTotal: red, blueTotal: blue, redMaxRange: Math.max(redMax - redMin, 1), blueMaxRange: Math.max(blueMax - blueMin, 1) };
+    }
+    function buildBalancedData() {
+      for (let i = 0; i < 20; i++) { const data = buildRoundData(); if (Math.abs(data.redTotal - data.blueTotal) < 20) return data; }
+      return buildRoundData();
+    }
+
+    // === ALUR GAME ===
+    function selectMode(mode) {
+      selectedMode = mode;
+      maxScorePerColor = mode === 'HARD' ? 120 : (mode === 'NORMAL' ? 50 : 45);
+      totalRounds = mode === 'HARD' ? 2 : 1;
+      currentRound = 1;
+      cachedRoundData = buildBalancedData();
+      lobby.style.display = 'none';
+      startRound();
+    }
+    function startRound() {
+      stage.style.display = 'flex';
+      roundIndicator.style.display = totalRounds > 1 ? 'block' : 'none';
+      roundIndicator.textContent = `RONDE ${currentRound}/${totalRounds}`;
+      sequence = cachedRoundData.sequence;
+      actualRedTotal = cachedRoundData.redTotal;
+      actualBlueTotal = cachedRoundData.blueTotal;
+      redMaxRange = cachedRoundData.redMaxRange;
+      blueMaxRange = cachedRoundData.blueMaxRange;
+      currentIndex = 0;
+      let count = 3;
+      mathDisplay.textContent = count;
+      const timer = setInterval(() => {
+        count--;
+        if (count > 0) mathDisplay.textContent = count;
+        else if (count === 0) mathDisplay.textContent = 'GO!';
+        else { clearInterval(timer); playNextStep(); }
+      }, 800);
+    }
+    function playNextStep() {
+      if (currentIndex >= sequence.length) {
+        if (currentRound < totalRounds) { currentRound++; startRound(); }
+        else { stage.style.display = 'none'; submitScreen.style.display = 'flex'; redInput.value = ''; blueInput.value = ''; redInput.focus(); }
+        return;
+      }
+      const step = sequence[currentIndex];
+      mathDisplay.textContent = step.display;
+      mathDisplay.style.color = step.color === 'RED' ? '#ff6b6b' : '#4ecdc4';
+      mathDisplay.classList.remove('pop-anim');
+      void mathDisplay.offsetWidth; // Trigger reflow
+      mathDisplay.classList.add('pop-anim');
+      
+      currentIndex++;
+      setTimeout(playNextStep, selectedMode === 'HARD' ? 1000 : 2000);
+    }
+    function showLobby() {
+      resultScreen.style.display = 'none'; submitScreen.style.display = 'none'; stage.style.display = 'none';
+      lobby.style.display = 'flex';
+      document.getElementById('mini-leaderboard').style.display = 'none';
+    }
+
+    // === SUBMIT (DIPERBAIKI) ===
+    document.getElementById('submit-btn').addEventListener('click', () => {
+      const rawRed = redInput.value.trim();
+      const rawBlue = blueInput.value.trim();
+      const totalMax = maxScorePerColor * 2;
+
+      // Validasi: Kedua kolom wajib diisi
+      if (rawRed === '' || rawBlue === '') {
+        // Jika salah satu kosong, skor 0
+        document.getElementById('final-score-val').textContent = `0`;
+        document.getElementById('res-red-actual').textContent = actualRedTotal;
+        document.getElementById('res-red-diff').innerHTML = '<span style="color:#f87171;">TIDAK DIISI</span>';
+        document.getElementById('res-blue-actual').textContent = actualBlueTotal;
+        document.getElementById('res-blue-diff').innerHTML = '<span style="color:#f87171;">TIDAK DIISI</span>';
+        document.getElementById('bonus-container').style.display = 'none';
+        
+        playSound('wrong');
+        submitScreen.style.display = 'none';
+        resultScreen.style.display = 'flex';
+
+        if (window.parent !== window) {
+          window.parent.postMessage({ type: 'ARCADE_RESULT', game: 'number-disco', score: 0, level: selectedMode }, '*');
+        }
+        document.getElementById('mini-leaderboard').style.display = 'block';
+        document.getElementById('lb-content').innerHTML = '<div style="text-align:center;color:#888;font-size:12px;">Memuat data...</div>';
+        return;
+      }
+
+      // Jika kedua kolom terisi, hitung skor
+      const userRed = parseInt(rawRed);
+      const userBlue = parseInt(rawBlue);
+      
+      let scoreRed = 0, scoreBlue = 0, diffRed = 0, diffBlue = 0;
+      
+      diffRed = Math.abs(userRed - actualRedTotal);
+      scoreRed = Math.max(0, maxScorePerColor - Math.floor(diffRed * 2));
+      
+      diffBlue = Math.abs(userBlue - actualBlueTotal);
+      scoreBlue = Math.max(0, maxScorePerColor - Math.floor(diffBlue * 2));
+      
+      const finalScore = scoreRed + scoreBlue;
+      const bonus = (diffRed === 0 && diffBlue === 0) ? 50 : 0;
+      
+      // Suara Feedback
+      if (diffRed === 0 && diffBlue === 0) playSound('correct');
+      else playSound('wrong');
+
+      document.getElementById('final-score-val').textContent = `${finalScore + bonus}`;
+      document.getElementById('res-red-actual').textContent = actualRedTotal;
+      document.getElementById('res-red-diff').textContent = diffRed === 0 ? 'PAS!' : `+${diffRed}`;
+      document.getElementById('res-blue-actual').textContent = actualBlueTotal;
+      document.getElementById('res-blue-diff').textContent = diffBlue === 0 ? 'PAS!' : `+${diffBlue}`;
+      document.getElementById('bonus-container').style.display = bonus > 0 ? 'block' : 'none';
+      document.getElementById('bonus-container').textContent = bonus > 0 ? `🎉 BONUS SEMPURNA: +${bonus}!` : '';
+      
+      submitScreen.style.display = 'none'; resultScreen.style.display = 'flex';
+      if (window.parent !== window) window.parent.postMessage({ type: 'ARCADE_RESULT', game: 'number-disco', score: finalScore + bonus, level: selectedMode }, '*');
+      document.getElementById('mini-leaderboard').style.display = 'block';
+      document.getElementById('lb-content').innerHTML = '<div style="text-align:center;color:#888;font-size:12px;">Memuat data...</div>';
+    });
+
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'LEADERBOARD_DATA') {
+        const data = event.data.data;
+        const lb = document.getElementById('lb-content');
+        lb.innerHTML = data && data.length > 0
+          ? data.map((item, i) => `<div style="display:flex; justify-content:space-between; font-size:14px; padding:6px; border-bottom:1px solid #eee;"><span>#${i+1} ${item.player_name}</span> <span style="color:#6366f1;">${item.score}</span></div>`).join('')
+          : '<div style="text-align:center;color:#888;font-size:12px;">Belum ada skor.</div>';
+      }
+    });
+  </script>
+</body>
+</html>

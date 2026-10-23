@@ -9,7 +9,7 @@ import { useAnnouncements } from '../../hooks/useAnnouncements.js';
 import { useAutoRefresh } from '../../hooks/useAutoRefresh.js';
 import { useAsync } from '../../hooks/useAsync.js';
 import { useJakartaClock } from '../../hooks/useJakartaClock.js';
-import { useClasses } from '../../hooks/useClasses.js'; // <-- Import hook kelas
+import { useClasses } from '../../hooks/useClasses.js';
 import { getActiveTeachers } from '../../services/masterService.js';
 import { todayJakarta, formatDateLong, formatTime } from '../../utils/jakartaTime.js';
 import { PERIOD_LABEL } from '../../utils/constants.js';
@@ -42,21 +42,32 @@ export default function HomePage() {
   const { data, loading, error, refetch } = useSchoolDay(today);
   const ann = useAnnouncements(3);
   const teachersState = useAsync(() => getActiveTeachers(), []);
-  const classesState = useClasses(); // <-- Panggil data kelas
+  const classesState = useClasses(); 
   useAutoRefresh(refetch);
 
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState('');
 
-  // Filter Pelajaran berdasarkan Kelas dan Guru
+  // Filter Pelajaran berdasarkan Kelas dan Guru (Mendukung Kelas Gabungan)
   const filteredLessons = (data?.lessons ?? []).filter((l) => {
-    // Filter Kelas (jika dipilih)
-    if (selectedClass && l.class?.id !== selectedClass) {
-      return false;
+    if (selectedClass) {
+      const selectedClassObj = classesState.data?.find(c => String(c.id) === String(selectedClass));
+      if (selectedClassObj) {
+        const selectedName = selectedClassObj.name.toLowerCase().replace(/\s+/g, ' ').trim();
+        const dbName = (l.class?.name || '').toLowerCase().replace(/\s+/g, ' ').trim();
+        const dbId = String(l.class?.id);
+        const isIdMatch = dbId === String(selectedClass);
+        const isNameMatch = dbName.includes(selectedName);
+        if (!isIdMatch && !isNameMatch) return false;
+      } else {
+        if (String(l.class?.id) !== String(selectedClass)) return false;
+      }
     }
-    // Filter Guru (jika dipilih)
+
     if (selectedTeacher) {
-      const isTeacher = l.teacher?.id === selectedTeacher || l.substitute_teacher?.id === selectedTeacher;
+      const isTeacher = 
+        String(l.teacher?.id) === String(selectedTeacher) || 
+        String(l.substitute_teacher?.id) === String(selectedTeacher);
       if (!isTeacher) return false;
     }
     return true;
@@ -80,7 +91,7 @@ export default function HomePage() {
     }
     let hasLessons = false;
     data.periods.forEach((period) => {
-      const lessons = filteredLessons.filter((l) => l.period?.id === period.id);
+      const lessons = filteredLessons.filter((l) => String(l.period?.id) === String(period.id));
       if (lessons.length === 0) return;
       hasLessons = true;
       text += `*${PERIOD_LABEL[period.period_code]}* (${formatTime(period.start_time)} - ${formatTime(period.end_time)})\n`;
@@ -159,7 +170,6 @@ export default function HomePage() {
       {data && (
         <div className="home-simple__content">
           
-          {/* BARIS FILTER (KELAS & GURU) */}
           <div className="home-filters no-print">
             <div className="home-filter-class">
               <span className="home-filter-teacher__label">
@@ -187,7 +197,6 @@ export default function HomePage() {
               />
             </div>
 
-            {/* Info Bar (Piket & Agenda) */}
             <div className="home-info-bar" style={{ flex: 1, minWidth: '300px' }}>
               <div className="home-info-bar__section">
                 <span className="home-info-bar__label">
@@ -227,10 +236,10 @@ export default function HomePage() {
             ) : (
               (data?.periods ?? []).map((period) => {
                 const lessonsInPeriod = filteredLessons.filter(
-                  (l) => l.period?.id === period.id
+                  (l) => String(l.period?.id) === String(period.id)
                 );
 
-                if (lessonsInPeriod.length === 0) return null;
+                if (lessonsInPeriod.length === 0) return null; 
 
                 const start = period.start_time.slice(0, 5);
                 const end = period.end_time.slice(0, 5);
@@ -241,21 +250,35 @@ export default function HomePage() {
                     key={period.id} 
                     className={`card card--flush home-session-card ${isOngoing ? 'is-ongoing' : ''}`}
                   >
-                    <div className="card__header" style={{ padding: '12px 16px', margin: 0, borderBottom: '1px solid var(--border)' }}>
-                      <h2 className="card__title" style={{ fontSize: 'var(--fs-sm)', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                        {isOngoing && <span className="live-dot no-print" />}
-                        {PERIOD_LABEL[period.period_code] ?? period.period_name}
-                        <span className="muted" style={{ marginLeft: 8, fontWeight: 400 }}>
-                          {formatTime(period.start_time)}–{formatTime(period.end_time)}
-                        </span>
-                        {isOngoing && (
-                          <span className="badge badge--status-published no-print" style={{ marginLeft: '4px' }}>Sedang Berlangsung</span>
-                        )}
-                      </h2>
-                      <Link to={`/sesi/${period.period_code}?tanggal=${today}`} className="btn btn--ghost btn--xs no-print">
+                    {/* HEADER BAR KBM DENGAN HIGHLIGHT & ANIMASI */}
+                    <div 
+                      className={`card__header is-highlighted ${isOngoing ? 'is-ongoing-header' : ''}`} 
+                      style={{ padding: '12px 16px', margin: 0, borderBottom: '1px solid var(--border)', position: 'relative' }}
+                    >
+                      
+                      {/* TOMBOL DETAIL */}
+                      <Link to={`/sesi/${period.period_code}?tanggal=${today}`} className="btn btn--ghost btn--xs no-print" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.2)', color: '#fff', borderColor: 'rgba(255,255,255,0.3)' }}>
                         Detail <ArrowRight size={12} />
                       </Link>
+
+                      {/* JUDUL KBM DI TENGAH */}
+                      <div className="kbm-title-wrapper" style={{ color: '#fff' }}>
+                        {isOngoing && <span className="live-dot no-print" style={{ marginRight: '8px', backgroundColor: '#fff', boxShadow: '0 0 0 0 rgba(255,255,255,0.7)' }} />}
+                        
+                        <span className="kbm-highlight">
+                          {PERIOD_LABEL[period.period_code] ?? period.period_name}
+                        </span>
+                        
+                        <span className="muted" style={{ marginLeft: 8, fontWeight: 500, color: 'rgba(255,255,255,0.9)' }}>
+                          {formatTime(period.start_time)}–{formatTime(period.end_time)}
+                        </span>
+                        
+                        {isOngoing && (
+                          <span className="badge no-print" style={{ marginLeft: '8px', background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.4)' }}>Sedang Berlangsung</span>
+                        )}
+                      </div>
                     </div>
+                    
                     <SessionTable lessons={lessonsInPeriod} />
                   </div>
                 );

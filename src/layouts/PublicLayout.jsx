@@ -6,7 +6,6 @@ import ConnectionIndicator from '../components/ConnectionIndicator.jsx';
 import OfflineNotice from '../components/OfflineNotice.jsx';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import InstallPWA from '../components/InstallPWA.jsx';
-import GameChat from '../components/GameChat.jsx'; // Tambahkan import ini
 
 const navItems = [
   { to: '/', label: 'Jadwal Hari Ini', end: true, Icon: CalendarDays },
@@ -17,55 +16,60 @@ const navItems = [
 
 export default function PublicLayout() {
   const today = todayJakarta();
-  const location = useLocation(); 
-  const isGameZone = location.pathname.startsWith('/game'); // Cek apakah sedang di halaman game
+  const location = useLocation();
+  
+  // Cek apakah sedang berada di halaman game
+  const isGameZone = location.pathname.startsWith('/game');
 
   return (
     <RealtimeProvider>
       <div className="app-shell">
-        <header className="public-header">
-          <div className="public-header__inner">
-            <Link to="/" className="brand" aria-label="WH School Schedule">
-              <span className="brand__mark" aria-hidden="true" style={{ overflow: 'hidden', background: 'transparent', padding: 0 }}>
-                <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
-              </span>
-              <span className="brand__text">
-                <strong className="brand__title">WH SCHOOL SCHEDULE</strong>
-                <span className="brand__subtitle">School Timetable &amp; Daily Information</span>
-              </span>
-            </Link>
+        
+        {/* HANYA TAMPILKAN HEADER JIKA BUKAN DI ZONA GAME */}
+        {!isGameZone && (
+          <header className="public-header">
+            <div className="public-header__inner">
+              <Link to="/" className="brand" aria-label="WH School Schedule">
+                <span className="brand__mark" aria-hidden="true" style={{ overflow: 'hidden', background: 'transparent', padding: 0 }}>
+                  <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
+                </span>
+                <span className="brand__text">
+                  <strong className="brand__title">WH SCHOOL SCHEDULE</strong>
+                  <span className="brand__subtitle">School Timetable &amp; Daily Information</span>
+                </span>
+              </Link>
 
-            <nav className="public-nav" aria-label="Navigasi utama">
-              {navItems.map(({ to, label, end, Icon }) => (
-                <NavLink key={to} to={to} end={end} className={({ isActive }) => 'public-nav__link' + (isActive ? ' is-active' : '')}>
-                  <Icon size={15} strokeWidth={2} />
-                  <span>{label}</span>
+              <nav className="public-nav" aria-label="Navigasi utama">
+                {navItems.map(({ to, label, end, Icon }) => (
+                  <NavLink key={to} to={to} end={end} className={({ isActive }) => 'public-nav__link' + (isActive ? ' is-active' : '')}>
+                    <Icon size={15} strokeWidth={2} />
+                    <span>{label}</span>
+                  </NavLink>
+                ))}
+                <NavLink to="/admin" className="public-nav__link public-nav__link--muted">
+                  <ShieldCheck size={15} strokeWidth={2} />
+                  <span>Admin</span>
                 </NavLink>
-              ))}
-              <NavLink to="/admin" className="public-nav__link public-nav__link--muted">
-                <ShieldCheck size={15} strokeWidth={2} />
-                <span>Admin</span>
-              </NavLink>
-              <ThemeToggle variant="header" />
-              <ConnectionIndicator />
-            </nav>
-          </div>
-        </header>
+                <ThemeToggle variant="header" />
+                <ConnectionIndicator />
+              </nav>
+            </div>
+          </header>
+        )}
 
         <main className="app-main">
           <OfflineNotice />
           <Outlet />
         </main>
 
-        <footer className="app-footer">
-          <p>WH School Schedule — Dibuat oleh <strong>Riefky Yoan</strong>.</p>
-        </footer>
+        {/* HANYA TAMPILKAN FOOTER JIKA BUKAN DI ZONA GAME */}
+        {!isGameZone && (
+          <footer className="app-footer">
+            <p>WH School Schedule — Dibuat oleh <strong>Riefky Yoan</strong>.</p>
+          </footer>
+        )}
 
         <InstallPWA />
-        
-        {/* GAMECHAT HANYA MUNCUL DI HALAMAN GAME */}
-        {isGameZone && <GameChat />}
-        
       </div>
     </RealtimeProvider>
   );

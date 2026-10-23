@@ -17,12 +17,12 @@ export default function GameChat() {
   
   const [deleteTarget, setDeleteTarget] = useState(null); 
   const [hasNewMessage, setHasNewMessage] = useState(false); 
-  const [isLoading, setIsLoading] = useState(false); // State Loading
+  const [isLoading, setIsLoading] = useState(false); 
   
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Effect 1: Load pesan saat chat dibuka
+  // 1. Load pesan saat chat dibuka
   useEffect(() => {
     if (!isOpen) { 
       setReplyTo(null); 
@@ -36,22 +36,32 @@ export default function GameChat() {
     });
   }, [isOpen]);
 
-  // Effect 2: Realtime pendengar pesan baru (jalan terus di background)
+  // 2. Realtime pendengar pesan baru (berjalan terus di background)
   useEffect(() => {
-    const channel = supabase.channel('chat_room_global')
+    // PERBAIKAN: Gunakan nama channel unik untuk setiap instance
+    const channelName = `chat_room_${Math.random().toString(36).slice(2, 9)}`;
+    
+    const channel = supabase.channel(channelName)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'game_chat' }, (payload) => {
-        setMessages((prev) => [...prev, payload.new]);
-        if (!isOpen) setHasNewMessage(true); // Munculkan titik merah
+        setMessages((prev) => {
+          // Cegah duplikat: hanya tambahkan jika ID belum ada
+          if (prev.some(m => m.id === payload.new.id)) return prev;
+          return [...prev, payload.new];
+        });
+        if (!isOpen) setHasNewMessage(true); 
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'game_chat' }, (payload) => {
         setMessages((prev) => prev.filter((msg) => msg.id !== payload.old.id));
       })
       .subscribe();
       
-    return () => { supabase.removeChannel(channel); };
+    return () => { 
+      // Bersihkan channel saat komponen unmount
+      supabase.removeChannel(channel); 
+    };
   }, [isOpen]);
 
-  // Effect 3: Scroll ke bawah otomatis
+  // 3. Scroll ke bawah otomatis
   useEffect(() => {
     if (isOpen) bottomRef.current?.scrollIntoView({ behavior: 'auto' });
   }, [messages, isOpen]);
@@ -89,7 +99,6 @@ export default function GameChat() {
           className="ig-chat-container animate-ig-chat" 
           style={{ '--chat-font-size': `${fontSize}px` }}
         >
-          {/* HEADER */}
           <div className="ig-chat-header">
             <div className="ig-chat-header-left">
               <button className="ig-icon-btn" onClick={() => setIsOpen(false)}>
@@ -112,7 +121,6 @@ export default function GameChat() {
             </div>
           </div>
 
-          {/* BODY PESAN */}
           <div className="ig-chat-messages">
             <div className="ig-chat-inner">
               
@@ -172,7 +180,6 @@ export default function GameChat() {
             </div>
           </div>
 
-          {/* INDIKATOR REPLY */}
           {replyTo && (
             <div className="ig-reply-indicator">
               <div className="ig-reply-content">
@@ -185,7 +192,6 @@ export default function GameChat() {
             </div>
           )}
 
-          {/* INPUT AREA */}
           <form onSubmit={handleSubmit} className="ig-chat-input-area">
             <div className="ig-input-wrapper">
               <button type="button" className="ig-input-icon"><Smile size={22} /></button>
@@ -206,7 +212,6 @@ export default function GameChat() {
         </div>
       )}
 
-      {/* TOMBOL TOGGLE */}
       {!isOpen && (
         <button 
           className="chat-toggle-btn ig-toggle-btn" 
@@ -220,7 +225,6 @@ export default function GameChat() {
         </button>
       )}
 
-      {/* MODAL KONFIRMASI HAPUS */}
       {deleteTarget && (
         <div className="ig-modal-overlay" onClick={() => setDeleteTarget(null)}>
           <div className="ig-modal-content" onClick={e => e.stopPropagation()}>

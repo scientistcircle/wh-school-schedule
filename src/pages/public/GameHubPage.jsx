@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Zap, Puzzle, ArrowRight, Gamepad2, LayoutGrid, Globe, Swords, Box, LogOut } from 'lucide-react';
+import { Zap, Puzzle, ArrowRight, Gamepad2, LayoutGrid, Globe, Swords, Box, LogOut, FlaskConical, Home } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useToast } from '../../contexts/ToastContext.jsx';
 
@@ -16,7 +16,6 @@ export default function GameHubPage() {
 
   return (
     <div className="game-hub-wrapper">
-      {/* ANIMASI BACKGROUND AMBIENT PS2 */}
       <div className="ps2-ambient-bg">
         <div className="orb orb-1"></div>
         <div className="orb orb-2"></div>
@@ -26,8 +25,11 @@ export default function GameHubPage() {
       <div className="game-hub-content">
         <div className="game-hub__header" style={{ position: 'relative' }}>
           
-          {/* Tombol Logout di Pojok Kanan */}
-          <div style={{ position: 'absolute', top: 0, right: 0 }}>
+          {/* Tombol Aksi di Pojok Kanan */}
+          <div style={{ position: 'absolute', top: 0, right: 0, display: 'flex', gap: '10px' }}>
+            <Link to="/" className="btn btn--ghost" style={{ background: 'rgba(0,0,0,0.3)', borderColor: 'var(--border)' }}>
+              <Home size={16} /> Beranda
+            </Link>
             <button type="button" onClick={handleLogout} className="btn btn--ghost" style={{ borderColor: 'var(--danger)', color: 'var(--danger)', background: 'rgba(0,0,0,0.3)' }}>
               <LogOut size={16} /> Keluar
             </button>
@@ -45,6 +47,77 @@ export default function GameHubPage() {
             <h2 className="game-hub-card__title">Math Sprint</h2>
             <p className="game-hub-card__desc">Uji kecepatan berhitungmu. Jawab soal matematika acak sebelum waktu habis.</p>
             <div className="game-hub-card__footer"><span className="badge badge--danger">Survival</span><ArrowRight size={18} className="game-hub-card__arrow" /></div>
+          </Link>
+          
+          <Link to="/game/sports-heads" className="game-hub-card glass-card">
+            <div className="game-hub-card__icon" style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e', fontSize: '28px' }}>⚽</div>
+            <h2 className="game-hub-card__title">Sports Heads</h2>
+            <p className="game-hub-card__desc">Game sepak bola kepala. Cetak gol sebanyak mungkin dalam 60 detik!</p>
+            <div className="game-hub-card__footer"><span className="badge badge--status-published">Sports</span><ArrowRight size={18} className="game-hub-card__arrow" /></div>
+          </Link>
+
+          <Link to="/game/car-runner" className="game-hub-card glass-card">
+            <div className="game-hub-card__icon" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', fontSize: '28px' }}>🏎️</div>
+            <h2 className="game-hub-card__title">Car Runner</h2>
+            <p className="game-hub-card__desc">Hindari lalu lintas dan kumpulkan koin di jalan raya 3D!</p>
+            <div className="game-hub-card__footer"><span className="badge badge--danger">Racing</span><ArrowRight size={18} className="game-hub-card__arrow" /></div>
+          </Link>
+
+          <Link to="/game/quiz-game" className="game-hub-card glass-card">
+            <div className="game-hub-card__icon" style={{ background: 'rgba(168, 85, 247, 0.15)', color: '#a855f7', fontSize: '28px' }}>🧠</div>
+            <h2 className="game-hub-card__title">Quiz Game</h2>
+            <p className="game-hub-card__desc">Jawab pertanyaan sains, matematika, dan geografi untuk menang!</p>
+            <div className="game-hub-card__footer"><span className="badge badge--imp-info">Quiz</span><ArrowRight size={18} className="game-hub-card__arrow" /></div>
+          </Link>
+
+          <Link to="/game/math-quest" className="game-hub-card glass-card">
+            <div className="game-hub-card__icon" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', fontSize: '28px' }}>🔢</div>
+            <h2 className="game-hub-card__title">Math Quest</h2>
+            <p className="game-hub-card__desc">Naiki tangga dengan menjawab soal matematika. Capai puncak!</p>
+            <div className="game-hub-card__footer"><span className="badge badge--imp-normal">Math</span><ArrowRight size={18} className="game-hub-card__arrow" /></div>
+          </Link>
+
+          <Link to="/game/catch-the-ball" className="game-hub-card glass-card">
+            <div className="game-hub-card__icon" style={{ background: 'rgba(74, 222, 128, 0.15)', color: '#4ade80', fontSize: '28px' }}>
+              🏀
+            </div>
+            <h2 className="game-hub-card__title">Catch the Ball</h2>
+            <p className="game-hub-card__desc">Tangkap bola yang jatuh dengan keranjang. Kumpulkan skor sebanyak mungkin!</p>
+            <div className="game-hub-card__footer">
+              <span className="badge badge--status-published">Arcade</span>
+              <ArrowRight size={18} className="game-hub-card__arrow" />
+            </div>
+          </Link>
+
+          <Link to="/game/number-disco" className="game-hub-card glass-card">
+            <div className="game-hub-card__icon" style={{ background: 'rgba(194, 184, 255, 0.15)', color: '#c2b8ff', fontSize: '28px' }}>
+              🔢
+            </div>
+            <h2 className="game-hub-card__title">Number Disco</h2>
+            <p className="game-hub-card__desc">Hitung deret angka merah dan biru secepat mungkin. Latih mental matematikamu!</p>
+            <div className="game-hub-card__footer">
+              <span className="badge badge--imp-normal">Math</span>
+              <ArrowRight size={18} className="game-hub-card__arrow" />
+            </div>
+          </Link>
+
+          <Link to="/game/crossy-road" className="game-hub-card glass-card">
+            <div className="game-hub-card__icon" style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', fontSize: '28px' }}>🐔</div>
+            <h2 className="game-hub-card__title">Crossy Road</h2>
+            <p className="game-hub-card__desc">Seberangi jalan raya 3D yang ramai. Hati-hati mobil dan truk!</p>
+            <div className="game-hub-card__footer"><span className="badge badge--warning">Arcade</span><ArrowRight size={18} className="game-hub-card__arrow" /></div>
+          </Link>
+
+          <Link to="/game/science-lab" className="game-hub-card glass-card">
+            <div className="game-hub-card__icon" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981' }}>
+              <FlaskConical size={28} />
+            </div>
+            <h2 className="game-hub-card__title">Science Lab 3D</h2>
+            <p className="game-hub-card__desc">Jelajahi laboratorium 3D, selesaikan eksperimen sains, dan selamatkan Energy Core!</p>
+            <div className="game-hub-card__footer">
+              <span className="badge badge--status-published">Adventure</span>
+              <ArrowRight size={18} className="game-hub-card__arrow" />
+            </div>
           </Link>
 
           <Link to="/game/word" className="game-hub-card glass-card">
@@ -90,9 +163,6 @@ export default function GameHubPage() {
           </Link>
         </div>
 
-        {/* KOMPONEN CHAT ROOM DITARUH DI SINI */}
-  
-        
       </div>
     </div>
   );

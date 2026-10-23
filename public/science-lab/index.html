@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SCIENCE LAB: The Lost Energy Core | 3D Educational Adventure</title>
+  <meta name="description" content="An interactive 3D science adventure game for Grades 6-10 featuring Chemistry, Biology, Physics, Earth Science, and Energy labs." />
+
+  <!-- Google Fonts: Orbitron for Sci-Fi Headings & Inter for clean text -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+
+  <!-- Core Stylesheets -->
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/ui.css" />
+
+  <!-- Three.js ES Module Import Map (Pinned r160 via CDN) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- 3D Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- UI Overlays Root (DOM on top of 3D Canvas) -->
+  <div id="ui-root">
+    
+    <!-- TOP HUD: Player status, current room, grade, stars, sound -->
+    <header id="hud-top" class="hud-panel">
+      <div class="hud-left">
+        <div class="badge-tag" id="hud-lab-tag">🧪 NOVA LAB: ENTRANCE</div>
+        <div class="grade-badge" id="hud-grade-badge">Grade 8</div>
+      </div>
+      
+      <div class="hud-center">
+        <div class="objective-box">
+          <span class="pulse-dot"></span>
+          <span class="objective-label">MISSION:</span>
+          <span id="hud-objective-text">Explore the Nova Science Laboratory and locate the central console.</span>
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <div class="stat-pill" title="Science Experience Points">
+          <span class="stat-icon">⚡</span>
+          <span id="hud-xp">0 XP</span>
+        </div>
+        <div class="stat-pill" title="Lab Research Coins">
+          <span class="stat-icon">🪙</span>
+          <span id="hud-coins">0</span>
+        </div>
+        <button id="btn-camera-toggle" class="hud-btn" title="Toggle First/Third Person View (V)">
+          🎥 <span class="btn-text">1st Person</span>
+        </button>
+        <button id="btn-sound-toggle" class="hud-btn" title="Toggle Audio (M)">
+          🔊
+        </button>
+        <button id="btn-pause" class="hud-btn" title="Pause Game (ESC)">
+          ⏸️
+        </button>
+      </div>
+    </header>
+
+    <!-- CENTER INTERACTION PROMPT -->
+    <div id="interaction-prompt" class="hidden">
+      <div class="prompt-box">
+        <span class="prompt-key">E</span>
+        <span id="prompt-label" class="prompt-text">Examine Science Terminal</span>
+      </div>
+    </div>
+
+    <!-- RETICLE / CROSSHAIR (First-person mode) -->
+    <div id="crosshair"></div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container"></div>
+
+    <!-- BOTTOM CONTROLS HINT (Desktop) -->
+    <div id="desktop-controls-hint">
+      <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Move</span>
+      <span><kbd>Space</kbd> Jump</span>
+      <span><kbd>Mouse</kbd> Look</span>
+      <span><kbd>E</kbd> Interact</span>
+      <span><kbd>V</kbd> Camera</span>
+      <span><kbd>ESC</kbd> Menu</span>
+    </div>
+
+    <!-- MOBILE ON-SCREEN JOYSTICK & CONTROLS -->
+    <div id="mobile-controls" class="mobile-only">
+      <div id="joystick-zone">
+        <div id="joystick-base">
+          <div id="joystick-thumb"></div>
+        </div>
+      </div>
+      <div id="mobile-action-buttons">
+        <button id="btn-mobile-jump" class="mobile-btn">⤴️<br>Jump</button>
+        <button id="btn-mobile-interact" class="mobile-btn interact">✨<br>Action</button>
+      </div>
+    </div>
+
+    <!-- MODAL POPUP CONTAINER (For quizzes, scanner, dialogue, pause menu) -->
+    <div id="modal-container" class="modal-backdrop hidden">
+      <div id="modal-card" class="glass-card">
+        <!-- Injected dynamically via UIManager -->
+      </div>
+    </div>
+
+    <!-- GLOBAL LOADING SCREEN -->
+    <div id="loading-screen">
+      <div class="loading-content">
+        <div class="lab-logo">
+          <span class="logo-icon">⚛️</span>
+          <h1>NOVA SCIENCE LAB</h1>
+          <p class="subtitle">The Lost Energy Core</p>
+        </div>
+        <div class="progress-bar-container">
+          <div id="loading-progress" class="progress-bar-fill"></div>
+        </div>
+        <div id="loading-status" class="loading-status-text">Initializing 3D Simulation Engine...</div>
+        <button id="btn-start-adventure" class="btn-primary pulse-anim hidden">
+          🚀 ENTER MAIN SYSTEM
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN MENU OVERLAY SYSTEM (Stage 2) -->
+    <div id="main-menu-overlay" class="menu-backdrop hidden">
+      
+      <!-- 1. MAIN MENU HOME VIEW -->
+      <div id="view-home" class="menu-card glass-card">
+        <div class="menu-header">
+          <div class="menu-brand">
+            <span class="brand-icon">⚛️</span>
+            <div>
+              <h2>NOVA SCIENCE LAB</h2>
+              <span class="brand-sub">The Lost Energy Core</span>
+            </div>
+          </div>
+          <div class="profile-chip" id="menu-profile-chip">
+            <span id="menu-chip-avatar">🧑‍🔬</span>
+            <div>
+              <div id="menu-chip-name" class="chip-name">Cadet Scientist</div>
+              <div id="menu-chip-grade" class="chip-grade">Grade 8</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="menu-story-banner">
+          <span class="alert-icon">⚠️</span>
+          <span>EMERGENCY: The Central Energy Core is offline. Restore all 5 Science Sectors to restore facility power!</span>
+        </div>
+
+        <div class="menu-buttons-grid">
+          <button id="btn-menu-start" class="btn-primary menu-action-btn pulse-anim">
+            <span>🚀</span>
+            <div class="btn-info">
+              <span class="btn-title">START MISSION</span>
+              <span class="btn-desc">Enter 3D Laboratory Simulation</span>
+            </div>
+          </button>
+
+          <button id="btn-menu-grade" class="btn-secondary menu-action-btn">
+            <span>🎓</span>
+            <div class="btn-info">
+              <span class="btn-title">SELECT GRADE (6–10)</span>
+              <span class="btn-desc" id="menu-grade-summary">Current: Grade 8 Curriculum</span>
+            </div>
+          </button>
+
+          <button id="btn-menu-levels" class="btn-secondary menu-action-btn">
+            <span>🗺️</span>
+            <div class="btn-info">
+              <span class="btn-title">LAB SECTOR MAP</span>
+              <span class="btn-desc">Select Lab Room & View Stars</span>
+            </div>
+          </button>
+
+          <button id="btn-menu-badges" class="btn-secondary menu-action-btn">
+            <span>🏆</span>
+            <div class="btn-info">
+              <span class="btn-title">BADGES & SCIENCE CARDS</span>
+              <span class="btn-desc" id="menu-badges-summary">0 Badges • 0 Cards Unlocked</span>
+            </div>
+          </button>
+
+          <button id="btn-menu-profile" class="btn-secondary menu-action-btn">
+            <span>🧑‍🔬</span>
+            <div class="btn-info">
+              <span class="btn-title">SCIENTIST PROFILE</span>
+              <span class="btn-desc">Customize Avatar & View Stats</span>
+            </div>
+          </button>
+
+          <button id="btn-menu-settings" class="btn-secondary menu-action-btn">
+            <span>⚙️</span>
+            <div class="btn-info">
+              <span class="btn-title">SETTINGS & CONTROLS</span>
+              <span class="btn-desc">Audio, Camera & Save Data</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="menu-footer">
+          <span>College Major Project • Educational Adventure Game</span>
+          <span id="menu-version-tag">v1.2 (Three.js WebGL)</span>
+        </div>
+      </div>
+
+      <!-- 2. GRADE SELECTION VIEW (Grades 6, 7, 8, 9, 10) -->
+      <div id="view-grades" class="menu-card glass-card hidden">
+        <div class="submenu-header">
+          <button id="btn-back-from-grades" class="btn-back">⬅ Back to Menu</button>
+          <h2>🎓 SELECT ACADEMIC GRADE LEVEL</h2>
+        </div>
+        <p class="submenu-intro">
+          Select your grade to adapt question complexity, formula challenges, and experiment mechanics to your school curriculum.
+        </p>
+        <div class="grades-grid" id="grades-container">
+          <!-- Dynamically populated by UIManager -->
+        </div>
+      </div>
+
+      <!-- 3. LAB SECTOR / LEVEL MAP VIEW -->
+      <div id="view-levels" class="menu-card glass-card hidden">
+        <div class="submenu-header">
+          <button id="btn-back-from-levels" class="btn-back">⬅ Back to Menu</button>
+          <h2>🗺️ NOVA LAB SECTORS & STAR RATING</h2>
+        </div>
+        <p class="submenu-intro">
+          Complete science missions to earn up to 3 Stars ⭐ per sector and unlock the central Energy Core reactor.
+        </p>
+        <div class="sectors-grid" id="sectors-container">
+          <!-- Dynamically populated by UIManager -->
+        </div>
+      </div>
+
+      <!-- 4. BADGES & SCIENCE CARDS GALLERY VIEW -->
+      <div id="view-badges" class="menu-card glass-card hidden">
+        <div class="submenu-header">
+          <button id="btn-back-from-badges" class="btn-back">⬅ Back to Menu</button>
+          <h2>🏆 BADGES & SCIENCE KNOWLEDGE DECK</h2>
+        </div>
+        <div class="gallery-tabs">
+          <button id="tab-btn-badges" class="tab-btn active">🎖️ Lab Badges</button>
+          <button id="tab-btn-cards" class="tab-btn">🃏 Science Formula Cards</button>
+        </div>
+        <div id="gallery-badges-content" class="gallery-grid">
+          <!-- Populated by UIManager -->
+        </div>
+        <div id="gallery-cards-content" class="gallery-grid hidden">
+          <!-- Populated by UIManager -->
+        </div>
+      </div>
+
+      <!-- 5. SCIENTIST PROFILE VIEW -->
+      <div id="view-profile" class="menu-card glass-card hidden">
+        <div class="submenu-header">
+          <button id="btn-back-from-profile" class="btn-back">⬅ Back to Menu</button>
+          <h2>🧑‍🔬 SCIENTIST PROFILE</h2>
+        </div>
+        <div class="profile-editor">
+          <div class="profile-avatar-picker">
+            <div class="current-avatar-preview" id="profile-avatar-display">🧑‍🔬</div>
+            <div class="avatar-options" id="avatar-options-list">
+              <span class="avatar-opt" data-avatar="🧑‍🔬">🧑‍🔬</span>
+              <span class="avatar-opt" data-avatar="👩‍🔬">👩‍🔬</span>
+              <span class="avatar-opt" data-avatar="👨‍🔬">👨‍🔬</span>
+              <span class="avatar-opt" data-avatar="🤖">🤖</span>
+              <span class="avatar-opt" data-avatar="🧑‍🚀">🧑‍🚀</span>
+              <span class="avatar-opt" data-avatar="🕵️">🕵️</span>
+            </div>
+          </div>
+          <div class="profile-form">
+            <label for="input-scientist-name">Scientist Call-Sign / Name:</label>
+            <input type="text" id="input-scientist-name" maxlength="20" value="Cadet Scientist" />
+            
+            <div class="profile-stats-summary">
+              <div class="profile-stat-box">
+                <span class="stat-num" id="profile-stat-xp">0</span>
+                <span class="stat-lbl">⚡ Total XP</span>
+              </div>
+              <div class="profile-stat-box">
+                <span class="stat-num" id="profile-stat-coins">50</span>
+                <span class="stat-lbl">🪙 Research Coins</span>
+              </div>
+              <div class="profile-stat-box">
+                <span class="stat-num" id="profile-stat-stars">0 / 21</span>
+                <span class="stat-lbl">⭐ Total Stars</span>
+              </div>
+            </div>
+
+            <button id="btn-save-profile" class="btn-primary" style="width: 100%; margin-top: 15px;">
+              💾 Save Profile
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. SETTINGS VIEW -->
+      <div id="view-settings" class="menu-card glass-card hidden">
+        <div class="submenu-header">
+          <button id="btn-back-from-settings" class="btn-back">⬅ Back to Menu</button>
+          <h2>⚙️ SYSTEM SETTINGS & CONTROLS</h2>
+        </div>
+        <div class="settings-list">
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Audio Synthesizer</div>
+              <div class="setting-desc">Sound effects & mission ambient hums</div>
+            </div>
+            <input type="checkbox" id="setting-sound-toggle" checked />
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-title">Default Camera Mode</div>
+              <div class="setting-desc">First-Person immersion or Third-Person view</div>
+            </div>
+            <select id="setting-camera-select">
+              <option value="firstPerson">First-Person (Immersive)</option>
+              <option value="thirdPerson">Third-Person (Character View)</option>
+            </select>
+          </div>
+
+          <div class="setting-row danger-zone">
+            <div>
+              <div class="setting-title" style="color: var(--neon-red);">Reset Save Progression</div>
+              <div class="setting-desc">Erase all stars, XP, badges, and unlock status</div>
+            </div>
+            <button id="btn-settings-reset" class="btn-secondary" style="color: var(--neon-red); border-color: rgba(239,68,68,0.5);">
+              🔄 Reset Data
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Main Game Entrypoint (ES Module) -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
