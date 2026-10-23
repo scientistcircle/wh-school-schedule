@@ -41,15 +41,27 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // ============================================================
+        // 🔧 PERBAIKAN: Naikkan batas ukuran file yang boleh di-precache.
+        // Default Workbox = 2 MiB (2 * 1024 * 1024 byte).
+        // Gambar background di proyek ini (~2.11 MB) melebihi default,
+        // sehingga build dihentikan. Kita naikkan ke 5 MB.
+        // ============================================================
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
+
         // Cache app shell (HTML/JS/CSS/icons).
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+
         // Hapus cache lama saat versi baru terpasang.
         cleanupOutdatedCaches: true,
+
         // Klaim klien segera setelah aktivasi.
         clientsClaim: true,
+
         // Jangan fallback ke index.html untuk permintaan admin API (kalau ada).
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/admin/],
+
         runtimeCaching: [
           // Data Supabase GET — NetworkFirst, cache 24 jam.
           // POST/PATCH/DELETE tidak di-cache (Workbox hanya cache GET).
